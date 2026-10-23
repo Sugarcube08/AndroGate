@@ -7,8 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayoutMediator
 import me.capcom.smsgateway.databinding.ActivityMainBinding
-import me.capcom.smsgateway.ui.HolderFragment
 import me.capcom.smsgateway.ui.HomeFragment
+import me.capcom.smsgateway.ui.MessagesListFragment
 import me.capcom.smsgateway.ui.SettingsFragment
 import me.capcom.smsgateway.helpers.LocaleHelper
 
@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
         override fun createFragment(position: Int): Fragment {
             return when (position) {
                 0 -> HomeFragment.newInstance()
-                1 -> HolderFragment.newInstance()
+                1 -> MessagesListFragment.newInstance()
                 else -> SettingsFragment.newInstance()
             }
         }

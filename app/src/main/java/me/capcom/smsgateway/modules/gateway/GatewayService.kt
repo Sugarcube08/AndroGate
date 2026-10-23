@@ -7,30 +7,24 @@ import io.ktor.http.HttpStatusCode
 import me.capcom.smsgateway.domain.EntitySource
 import me.capcom.smsgateway.domain.MessageContent
 import me.capcom.smsgateway.domain.ProcessingState
+import me.capcom.smsgateway.domain.SimCard
 import me.capcom.smsgateway.helpers.SubscriptionsHelper
 import me.capcom.smsgateway.modules.device.DeviceService
 import me.capcom.smsgateway.modules.events.EventBus
 import me.capcom.smsgateway.modules.gateway.events.DeviceRegisteredEvent
-import me.capcom.smsgateway.modules.gateway.inbox.InboxUploadService
-import me.capcom.smsgateway.modules.gateway.inbox.InboxUploadWorker
-import me.capcom.smsgateway.modules.gateway.services.SSEForegroundService
+import me.capcom.smsgateway.modules.gateway.services.GatewayForegroundService
 import me.capcom.smsgateway.modules.gateway.workers.PullMessagesWorker
 import me.capcom.smsgateway.modules.gateway.workers.SendStateWorker
 import me.capcom.smsgateway.modules.gateway.workers.SettingsUpdateWorker
-import me.capcom.smsgateway.modules.gateway.workers.WebhooksUpdateWorker
-import me.capcom.smsgateway.modules.localserver.domain.SimCard
 import me.capcom.smsgateway.modules.logs.LogsService
 import me.capcom.smsgateway.modules.logs.db.LogEntry
 import me.capcom.smsgateway.modules.messages.MessagesService
 import me.capcom.smsgateway.modules.messages.MessagesSettings
 import me.capcom.smsgateway.modules.messages.data.SendParams
 import me.capcom.smsgateway.modules.messages.data.SendRequest
-import me.capcom.smsgateway.modules.receiver.data.InboxMessage
-import me.capcom.smsgateway.services.PushService
 import java.util.Date
 
 class GatewayService(
-    private val inboxUploadService: InboxUploadService,
     private val messagesService: MessagesService,
     private val settings: GatewaySettings,
     private val events: EventBus,
@@ -51,11 +45,9 @@ class GatewayService(
     fun start(context: Context) {
         if (!settings.enabled) return
 
-        PushService.register(context)
         PullMessagesWorker.start(context)
-        WebhooksUpdateWorker.start(context)
         SettingsUpdateWorker.start(context)
-        InboxUploadWorker.start(context)
+        GatewayForegroundService.start(context)
 
         eventsReceiver.start()
     }
@@ -63,10 +55,8 @@ class GatewayService(
     fun stop(context: Context) {
         eventsReceiver.stop()
 
-        InboxUploadWorker.stop(context)
-        SSEForegroundService.stop(context)
+        GatewayForegroundService.stop(context)
         SettingsUpdateWorker.stop(context)
-        WebhooksUpdateWorker.stop(context)
         PullMessagesWorker.stop(context)
 
         this._api = null
@@ -282,17 +272,7 @@ class GatewayService(
                         content.data,
                         content.port
                     )
-                    is GatewayApi.MessageContent.Mms -> MessageContent.Mms(
-                        subject = content.subject,
-                        text = content.text,
-                        attachments = content.attachments.map {
-                            MessageContent.Mms.Attachment(
-                                contentType = it.contentType,
-                                name = it.name,
-                                data = it.data,
-                            )
-                        }
-                    )
+                    is GatewayApi.MessageContent.Mms -> throw UnsupportedOperationException("MMS is not supported in AndroGate")
                 },
                 message.phoneNumbers,
                 message.isEncrypted ?: false,
@@ -319,43 +299,6 @@ class GatewayService(
             settings.token,
             listOf(request)
         )
-    }
-    //endregion
-
-    //region Inbox
-    fun enqueueInboxMessage(
-        context: Context,
-        message: InboxMessage,
-        sender: String,
-        recipient: String?,
-        simNumber: Int?,
-        date: Date,
-    ) {
-        if (!settings.enabled) {
-            return
-        }
-
-        inboxUploadService.enqueue(
-            context, message, sender, recipient, simNumber, date
-        )
-    }
-
-    internal suspend fun uploadInbox(messages: List<GatewayApi.InboxMessage>) {
-        val token = settings.registrationInfo?.token
-            ?: return
-
-        api.postInbox(token, messages)
-    }
-    //endregion
-
-    //region Webhooks
-    internal suspend fun getWebHooks(): List<GatewayApi.WebHook> {
-        val settings = settings.registrationInfo
-        return if (settings != null) {
-            api.getWebHooks(settings.token)
-        } else {
-            emptyList()
-        }
     }
     //endregion
 

@@ -38,7 +38,6 @@ import me.capcom.smsgateway.modules.messages.data.StoredSendRequest
 import me.capcom.smsgateway.modules.messages.exceptions.ConflictException
 import me.capcom.smsgateway.modules.messages.workers.LogTruncateWorker
 import me.capcom.smsgateway.modules.messages.workers.SendMessagesWorker
-import me.capcom.smsgateway.modules.mms.MmsSender
 import me.capcom.smsgateway.receivers.EventsReceiver
 import java.util.Date
 import kotlin.coroutines.coroutineContext
@@ -51,7 +50,6 @@ class MessagesService(
     private val encryptionService: EncryptionService,
     private val machine: MessageStateService,
     private val logsService: LogsService,
-    private val mmsSender: MmsSender,
 ) {
     /**
      * Serializes the worker (KEEP/REPLACE) decisions made from the DB snapshot
@@ -177,26 +175,10 @@ class MessagesService(
             MODULE_NAME,
             "Status intent received with action ${intent.action} and result code $resultCode",
             mapOf(
-                "data" to intent.dataString,
-                "uri" to intent.extras?.getString("uri"),
-                "pdu" to intent.extras?.getByteArray("pdu")?.joinToString("") { "%02x".format(it) },
+                "action" to (intent.action ?: "null"),
+                "resultCode" to resultCode.toString(),
             )
         )
-
-        if (intent.action == EventsReceiver.ACTION_MMS_SENT) {
-            val id = intent.getStringExtra(EventsReceiver.EXTRA_MESSAGE_ID) ?: return
-            val (mmsState, mmsError) = if (resultCode == Activity.RESULT_OK) {
-                ProcessingState.Sent to null
-            } else {
-                ProcessingState.Failed to "MMS send result: ${mmsErrorToMessage(resultCode)}"
-            }
-            try {
-                machine.transitionRecipients(id, mmsState, mmsError)
-            } finally {
-                MmsSender.cleanup(context, id)
-            }
-            return
-        }
 
         val (state, error) = when (intent.action) {
             EventsReceiver.ACTION_SENT -> when {
@@ -381,6 +363,11 @@ class MessagesService(
      */
     private suspend fun sendMessage(request: StoredSendRequest): Boolean {
         if (request.params.validUntil?.before(Date()) == true) {
+            logsService.insert(
+                LogEntry.Priority.WARN,
+                MODULE_NAME,
+                "OTP/Message TTL expired prior to transmission (${request.params.validUntil}); rejecting dispatch for message ${request.message.id}",
+            )
             machine.transitionRecipients(request.message.id, ProcessingState.Failed, "TTL expired")
             return false
         }
@@ -397,13 +384,22 @@ class MessagesService(
         }
 
         try {
-            when (request.message.content) {
-                is MessageContent.Mms -> sendMMS(request)
-                else -> sendSMS(request)
-            }
+            sendSMS(request)
             return true
         } catch (e: Exception) {
             e.printStackTrace()
+            val isTransient = (e is IllegalStateException || e is RuntimeException) &&
+                    (e.message?.contains("SIM", ignoreCase = true) == true || e.message?.contains("cellular", ignoreCase = true) == true)
+
+            if (isTransient && (request.params.validUntil == null || request.params.validUntil.after(Date()))) {
+                logsService.insert(
+                    LogEntry.Priority.WARN,
+                    MODULE_NAME,
+                    "Temporary telephony/SIM unavailability for message ${request.message.id}: ${e.message}; preserving in queue for retry",
+                )
+                throw e
+            }
+
             machine.transitionRecipients(
                 request.message.id,
                 ProcessingState.Failed,
@@ -412,67 +408,6 @@ class MessagesService(
         }
 
         return false
-    }
-
-    private suspend fun sendMMS(request: StoredSendRequest) {
-        val message = request.message
-        val id = message.id
-        val content = message.content as MessageContent.Mms
-
-        val simNumber = selectSimNumber(request.id, request.params)
-        if (request.params.simNumber == null && simNumber != null) {
-            dao.updateSimNumber(id, simNumber + 1)
-        }
-
-        // Resolve a subscription ID + MSISDN from the chosen SIM slot (if any).
-        // Verizon and some other US carriers silently drop MMS whose From
-        // header is the insert-address-token, so we pass an explicit MSISDN
-        // whenever the platform exposes one.
-        val subscriptionId = simNumber?.let { SubscriptionsHelper.getSubscriptionId(context, it) }
-        val fromMsisdn = simNumber?.let { SubscriptionsHelper.getPhoneNumber(context, it) }
-            ?: SubscriptionsHelper.getActiveSimCards(context)?.firstOrNull()?.phoneNumber
-
-        val decryptedContent = if (message.isEncrypted) {
-            MessageContent.Mms(
-                subject = content.subject?.let { encryptionService.decrypt(it) },
-                text = content.text?.let { encryptionService.decrypt(it) },
-                attachments = content.attachments.map {
-                    it.copy(
-                        name = it.name?.let { v -> encryptionService.decrypt(v) },
-                        data = encryptionService.decrypt(it.data)
-                    )
-                }
-            )
-        } else content
-
-        val recipients = message.phoneNumbers.map { source ->
-            decryptAndNormalizePhone(
-                source,
-                message.isEncrypted,
-                request.params.skipPhoneValidation
-            )
-        }
-
-        dao.updatePartsCount(id, 1 + decryptedContent.attachments.size)
-
-        // Don't set fromMsisdn — insert-address-token lets the MMSC fill
-        // the From field, which matches how Google Messages composes its
-        // PDUs and is what Verizon's MMSC expects.
-        mmsSender.send(id, recipients, decryptedContent, subscriptionId, fromMsisdn)
-
-        // Move all recipients out of Pending immediately so the worker loop
-        // does not re-pull this message while we wait for ACTION_MMS_SENT.
-        // State transitions to Sent/Failed are driven by processStateIntent.
-        // Only transition recipients that are still Pending: if the
-        // ACTION_MMS_SENT callback already recorded Sent/Failed, the terminal
-        // state must not be overwritten.
-        try {
-            machine.transitionRecipients(id, ProcessingState.Processed)
-        } catch (_: IllegalStateException) {
-            // The ACTION_MMS_SENT callback already advanced recipients to
-            // Sent/Failed before this call executed. This is a benign race
-            // condition; the callback owns the final state.
-        }
     }
 
     private fun selectSimNumber(id: Long, params: SendParams): Int? {
@@ -537,9 +472,6 @@ class MessagesService(
                         }
                     }
                 }
-
-                is MessageContent.Mms ->
-                    throw IllegalStateException("MMS content must be handled via sendMMS")
 
                 is MessageContent.Data -> {
                     val data = when (message.isEncrypted) {
@@ -640,7 +572,10 @@ class MessagesService(
             val subscriptionManager = SubscriptionsHelper.getSubscriptionsManager(context)
                 ?: throw UnsupportedOperationException("SIM selection available from API 22")
 
-            subscriptionManager.activeSubscriptionInfoList.find {
+            val activeList = subscriptionManager.activeSubscriptionInfoList
+                ?: throw IllegalStateException("No active SIM subscriptions found on device")
+
+            activeList.find {
                 it.simSlotIndex == simNumber
             }?.let {
                 if (Build.VERSION.SDK_INT < 31) {
@@ -650,7 +585,7 @@ class MessagesService(
                     context.getSystemService(SmsManager::class.java)
                         .createForSubscriptionId(it.subscriptionId)
                 }
-            } ?: throw UnsupportedOperationException("SIM ${simNumber + 1} not found")
+            } ?: throw IllegalStateException("SIM in slot ${simNumber + 1} not found")
         } else {
             if (Build.VERSION.SDK_INT < 31) {
                 @Suppress("DEPRECATION")
@@ -658,21 +593,6 @@ class MessagesService(
             } else {
                 context.getSystemService(SmsManager::class.java)
             }
-        }
-    }
-
-    private fun mmsErrorToMessage(resultCode: Int): String {
-        return when (resultCode) {
-            Activity.RESULT_OK -> "OK"
-            SmsManager.MMS_ERROR_UNSPECIFIED -> "MMS_ERROR_UNSPECIFIED (An unspecified error occurred)"
-            SmsManager.MMS_ERROR_INVALID_APN -> "MMS_ERROR_INVALID_APN (The APN is invalid)"
-            SmsManager.MMS_ERROR_UNABLE_CONNECT_MMS -> "MMS_ERROR_UNABLE_CONNECT_MMS (Unable to connect to the MMS service)"
-            SmsManager.MMS_ERROR_HTTP_FAILURE -> "MMS_ERROR_HTTP_FAILURE (HTTP failure during MMS transfer)"
-            SmsManager.MMS_ERROR_IO_ERROR -> "MMS_ERROR_IO_ERROR (An I/O error occurred)"
-            SmsManager.MMS_ERROR_RETRY -> "MMS_ERROR_RETRY (The carrier indicated a retry is needed)"
-            SmsManager.MMS_ERROR_CONFIGURATION_ERROR -> "MMS_ERROR_CONFIGURATION_ERROR (MMS configuration error)"
-            SmsManager.MMS_ERROR_NO_DATA_NETWORK -> "MMS_ERROR_NO_DATA_NETWORK (No data network available)"
-            else -> "Unknown MMS error: $resultCode"
         }
     }
 
@@ -685,7 +605,7 @@ class MessagesService(
         return if (skipValidation) {
             phone.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
         } else {
-            PhoneHelper.filterPhoneNumber(phone, countryCode ?: "RU")
+            PhoneHelper.filterPhoneNumber(phone, countryCode ?: "IN")
         }
     }
 

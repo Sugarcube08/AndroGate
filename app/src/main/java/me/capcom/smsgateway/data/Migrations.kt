@@ -50,13 +50,14 @@ val MIGRATION_13_14 = object : Migration(13, 14) {
                 isEncrypted,
                 skipPhoneValidation,
                 priority,
-                source,
                 type,
+                source,
                 content,
                 state,
                 createdAt,
                 processedAt
-            ) SELECT
+            )
+            SELECT
                 id,
                 withDeliveryReport,
                 simNumber,
@@ -64,9 +65,9 @@ val MIGRATION_13_14 = object : Migration(13, 14) {
                 isEncrypted,
                 skipPhoneValidation,
                 priority,
-                source,
-                'Text' AS type,
-                '{"text": "' || replace(replace(text, '\\', '\\\\'), '"', '\\"') || '"}' AS content,
+                'Text',
+                'Local',
+                '{"text":"' || replace(replace(text, '\', '\\'), '"', '\"') || '"}',
                 state,
                 createdAt,
                 processedAt
@@ -92,5 +93,16 @@ val MIGRATION_21_22 = object : Migration(21, 22) {
             DELETE FROM incoming_messages WHERE 1
         """.trimIndent()
         )
+    }
+}
+
+val MIGRATION_25_26 = object : Migration(25, 26) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("DROP TABLE IF EXISTS webhooks")
+        database.execSQL("DROP TABLE IF EXISTS webhook_queue")
+        database.execSQL("DROP TABLE IF EXISTS webhook_queue_entries")
+        database.execSQL("DROP TABLE IF EXISTS inbox_uploads")
+        database.execSQL("DROP TABLE IF EXISTS tokens")
+        database.execSQL("DROP TABLE IF EXISTS incoming_messages")
     }
 }

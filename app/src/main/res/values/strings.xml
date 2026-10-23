@@ -2,7 +2,7 @@
     <string name="address_is">%1$s</string>
     <string name="api_url_private_token_credentials_etc">API URL, private token, credentials, etc.</string>
     <string name="api_url">API URL</string>
-    <string name="app_name" translatable="false">SMSGate</string>
+    <string name="app_name" translatable="false">AndroGate</string>
     <string name="app_version_build">App version (build)</string>
     <string name="automatic_key_rotation">Automatic key rotation</string>
     <string name="battery_optimization_already_disabled">Battery optimization already disabled</string>
@@ -100,7 +100,6 @@
     <string name="send_messages_notification">Sending messages…</string>
     <string name="sending_webhook">Sending webhook…</string>
     <string name="processing_webhook_queue">Processing webhook queue…</string>
-    <string name="processing_inbox_queue">Processing inbox upload…</string>
     <string name="server_address">Server address</string>
     <string name="server">Server</string>
     <string name="set_maximum_value_to_activate">Set maximum value to activate</string>
@@ -118,7 +117,7 @@
     <string name="sign_up">Sign Up</string>
     <string name="signing_key">Signing Key</string>
     <string name="sms_gateway_is_running_on_port">SMSGate is running on port %1$d</string>
-    <string name="sms_gateway">SMSGate</string>
+    <string name="sms_gateway">AndroGate</string>
     <string name="sms" translatable="false">sms</string>
     <string name="success_long_press_to_copy">Success, long press to copy</string>
     <string name="system">System</string>

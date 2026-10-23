@@ -114,7 +114,7 @@ class MessagesListFragment : Fragment(), MessagesAdapter.OnItemClickListener<Mes
 
     override fun onItemClick(item: Message) {
         parentFragmentManager.commit {
-            replace(R.id.rootLayout, MessageDetailsFragment.newInstance(item.id))
+            replace(R.id.fragmentContainer, MessageDetailsFragment.newInstance(item.id))
             addToBackStack(null)
         }
     }

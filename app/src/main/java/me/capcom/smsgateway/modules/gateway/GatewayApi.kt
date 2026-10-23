@@ -23,7 +23,6 @@ import io.ktor.util.encodeBase64
 import me.capcom.smsgateway.BuildConfig
 import me.capcom.smsgateway.domain.ProcessingState
 import me.capcom.smsgateway.extensions.configure
-import me.capcom.smsgateway.modules.webhooks.domain.WebHookEvent
 import java.util.Date
 
 class GatewayApi(
@@ -35,7 +34,7 @@ class GatewayApi(
 
     private val client = HttpClient(OkHttp) {
         install(UserAgent) {
-            agent = "me.capcom.smsgateway/" + BuildConfig.VERSION_NAME
+            agent = "AndroGate/" + BuildConfig.VERSION_NAME
         }
         install(ContentNegotiation) {
             gson {
@@ -97,20 +96,6 @@ class GatewayApi(
             contentType(ContentType.Application.Json)
             setBody(request)
         }
-    }
-
-    suspend fun postInbox(token: String, messages: List<InboxMessage>) {
-        client.post("$baseUrl/inbox") {
-            bearerAuth(token)
-            contentType(ContentType.Application.Json)
-            setBody(messages)
-        }
-    }
-
-    suspend fun getWebHooks(token: String): List<WebHook> {
-        return client.get("$baseUrl/webhooks") {
-            bearerAuth(token)
-        }.body()
     }
 
     suspend fun getUserCode(credentials: Pair<String, String>): GetUserCodeResponse {
@@ -283,12 +268,6 @@ class GatewayApi(
         Failed
     }
 
-    data class WebHook(
-        val id: String,
-        val url: String,
-        val event: WebHookEvent,
-    )
-
     enum class ProcessingOrder {
         @SerializedName("lifo")
         LIFO,
@@ -307,32 +286,5 @@ class GatewayApi(
         val phoneNumber: String?,
         val carrierName: String?,
         val iccid: String?,
-    )
-
-    object InboxMessageType {
-        const val SMS = "SMS"
-        const val DATA_SMS = "DATA_SMS"
-        const val MMS = "MMS"
-        const val MMS_DOWNLOADED = "MMS_DOWNLOADED"
-    }
-
-    data class InboxMessage(
-        val id: String,
-        val type: String,
-        val sender: String,
-        val recipient: String?,
-        val simNumber: Int?,
-        val content: String,
-        val isEncrypted: Boolean = true,
-        val createdAt: Date,
-        val attachments: List<InboxMessageAttachment>?,
-    )
-
-    data class InboxMessageAttachment(
-        val partId: Long,
-        val contentType: String,
-        val name: String,
-        val size: Long?,
-        val data: String, // base64 of raw bytes
     )
 }

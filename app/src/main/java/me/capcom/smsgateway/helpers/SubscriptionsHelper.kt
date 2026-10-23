@@ -8,7 +8,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.telephony.SubscriptionManager
 import androidx.core.app.ActivityCompat
-import me.capcom.smsgateway.modules.localserver.domain.SimCard
+import me.capcom.smsgateway.domain.SimCard
 
 object SubscriptionsHelper {
     @Suppress("DEPRECATION")

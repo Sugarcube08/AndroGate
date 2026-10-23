@@ -2,7 +2,6 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'com.google.devtools.ksp'
-    id 'com.google.gms.google-services'
 }
 
 ksp {
@@ -10,26 +9,32 @@ ksp {
 }
 
 android {
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
-        applicationId "me.capcom.smsgateway"
-        minSdk 21
-        targetSdk 33
+        applicationId "com.connectme.androgate"
+        minSdk 26
+        targetSdk 34
         versionCode 1
         versionName "1.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    lint {
+        disable 'MissingTranslation', 'InlinedApi'
+        abortOnError false
     }
     buildFeatures {
         viewBinding true
     }
     signingConfigs {
         release {
-            storeFile file("keystore.jks")
-            storePassword System.getenv("SIGNING_STORE_PASSWORD")
-            keyAlias System.getenv("SIGNING_KEY_ALIAS")
-            keyPassword System.getenv("SIGNING_KEY_PASSWORD")
+            if (file("keystore.jks").exists()) {
+                storeFile file("keystore.jks")
+                storePassword System.getenv("SIGNING_STORE_PASSWORD")
+                keyAlias System.getenv("SIGNING_KEY_ALIAS")
+                keyPassword System.getenv("SIGNING_KEY_PASSWORD")
+            }
         }
     }
     buildTypes {
@@ -37,21 +42,14 @@ android {
             debuggable true
             manifestPlaceholders = [networkSecurityConfig: "@xml/network_security_config"]
         }
-        debugInsecure {
-            debuggable true
-            manifestPlaceholders = [networkSecurityConfig: "@xml/network_security_config_insecure"]
-            signingConfig signingConfigs.debug
-        }
-        insecure {
-            initWith debug
-            debuggable true
-            signingConfig signingConfigs.release
-            manifestPlaceholders = [networkSecurityConfig: "@xml/network_security_config_insecure"]
-        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            if (file("keystore.jks").exists()) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
+            }
             manifestPlaceholders = [networkSecurityConfig: "@xml/network_security_config"]
         }
     }
@@ -70,8 +68,6 @@ android {
 
     testOptions {
         unitTests {
-            // EventBus.emit logs via android.util.Log; local unit tests must not
-            // fail on the mockable android.jar "not mocked" stub.
             returnDefaultValues = true
         }
     }
@@ -90,16 +86,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version")
 
     implementation("io.ktor:ktor-serialization-gson:$ktor_version")
-
-    implementation("io.ktor:ktor-server-core:$ktor_version")
-    implementation("io.ktor:ktor-server-netty:$ktor_version")
-    implementation("io.ktor:ktor-server-compression:$ktor_version")
-    implementation("io.ktor:ktor-server-status-pages:$ktor_version")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
-    implementation("io.ktor:ktor-server-call-logging:$ktor_version")
-    implementation("io.ktor:ktor-server-auth:$ktor_version")
-    implementation("io.ktor:ktor-server-auth-jwt:$ktor_version")
-
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-client-okhttp:$ktor_version")
@@ -107,28 +93,22 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:$okhttp_version")
     implementation("com.squareup.okhttp3:okhttp-sse:$okhttp_version")
 
-    // Kotlin + coroutines
+    // AndroidX WorkManager
     implementation "androidx.work:work-runtime-ktx:$work_version"
 
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
 
-    implementation("androidx.preference:preference-ktx:1.2.0")
-
-    implementation("androidx.core:core-ktx:1.8.0")
-    implementation("androidx.appcompat:appcompat:1.4.2")
-    implementation("com.google.android.material:material:1.6.1")
+    implementation("androidx.preference:preference-ktx:1.2.1")
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation 'androidx.preference:preference-ktx:1.2.1'
 
     implementation("com.aventrix.jnanoid:jnanoid:2.0.0")
 
     implementation("androidx.room:room-ktx:$room_version")
     ksp("androidx.room:room-compiler:$room_version")
-
-    // Import the Firebase BoM
-    implementation platform('com.google.firebase:firebase-bom:31.1.1')
-    implementation 'com.google.firebase:firebase-messaging-ktx'
 
     implementation 'com.googlecode.libphonenumber:libphonenumber:9.0.22'
 

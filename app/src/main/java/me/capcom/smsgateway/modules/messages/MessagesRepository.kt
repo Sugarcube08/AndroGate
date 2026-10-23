@@ -105,10 +105,7 @@ class MessagesRepository(
                         MessageContent.Data::class.java
                     )
 
-                    MessageType.Mms -> gson.fromJson(
-                        message.message.content,
-                        MessageContent.Mms::class.java
-                    )
+                    MessageType.Mms -> throw UnsupportedOperationException("MMS is not supported in AndroGate")
                 },
                 phoneNumbers = message.recipients.filter { it.state == ProcessingState.Pending }
                     .map { it.phoneNumber },

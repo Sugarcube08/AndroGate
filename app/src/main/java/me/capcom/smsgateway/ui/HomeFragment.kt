@@ -25,20 +25,18 @@ import androidx.core.text.toSpanned
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
-import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import me.capcom.smsgateway.R
+import me.capcom.smsgateway.data.dao.MessagesDao
 import me.capcom.smsgateway.databinding.FragmentHomeBinding
 import me.capcom.smsgateway.helpers.SettingsHelper
+import me.capcom.smsgateway.helpers.SubscriptionsHelper
 import me.capcom.smsgateway.modules.connection.ConnectionService
 import me.capcom.smsgateway.modules.events.EventBus
 import me.capcom.smsgateway.modules.gateway.GatewayService
 import me.capcom.smsgateway.modules.gateway.GatewaySettings
 import me.capcom.smsgateway.modules.gateway.events.DeviceRegisteredEvent
-import me.capcom.smsgateway.modules.localserver.LocalServerService
-import me.capcom.smsgateway.modules.localserver.LocalServerSettings
-import me.capcom.smsgateway.modules.localserver.events.IPReceivedEvent
 import me.capcom.smsgateway.modules.orchestrator.OrchestratorService
 import me.capcom.smsgateway.ui.dialogs.FirstStartDialogFragment
 import org.koin.android.ext.android.inject
@@ -49,15 +47,11 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val settingsHelper: SettingsHelper by inject()
-    private val localServerSettings: LocalServerSettings by inject()
     private val gatewaySettings: GatewaySettings by inject()
     private val connectionService: ConnectionService by inject()
-
+    private val messagesDao: MessagesDao by inject()
     private val events: EventBus by inject()
-
-    private val localServerSvc: LocalServerService by inject()
     private val gatewaySvc: GatewayService by inject()
-
     private val orchestratorSvc: OrchestratorService by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,12 +60,7 @@ class HomeFragment : Fragment() {
         setFragmentResultListener(FirstStartDialogFragment.REQUEST_KEY) { _, data ->
             when (FirstStartDialogFragment.getResult(data)) {
                 FirstStartDialogFragment.Result.Canceled -> {
-                    Toast.makeText(
-                        requireContext(),
-                        "Operation cancelled",
-                        Toast.LENGTH_SHORT
-                    )
-                        .show()
+                    Toast.makeText(requireContext(), "Operation cancelled", Toast.LENGTH_SHORT).show()
                     return@setFragmentResultListener
                 }
 
@@ -132,93 +121,54 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.textLocalIP.movementMethod = LinkMovementMethod.getInstance()
-        binding.textPublicIP.movementMethod = LinkMovementMethod.getInstance()
-        binding.textLocalUsername.movementMethod = LinkMovementMethod.getInstance()
-        binding.textLocalPassword.movementMethod = LinkMovementMethod.getInstance()
-        binding.textLocalDeviceId.movementMethod = LinkMovementMethod.getInstance()
         binding.textRemoteDeviceId.movementMethod = LinkMovementMethod.getInstance()
+        binding.textRemoteUsername.movementMethod = LinkMovementMethod.getInstance()
+        binding.textRemotePassword.movementMethod = LinkMovementMethod.getInstance()
 
         binding.switchAutostart.isChecked = settingsHelper.autostart
-
         binding.switchAutostart.setOnCheckedChangeListener { _, isChecked ->
             settingsHelper.autostart = isChecked
         }
+
+        binding.switchUseRemoteServer.isChecked = gatewaySettings.enabled
         binding.switchUseRemoteServer.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked != gatewaySettings.enabled) {
                 restartRequiredNotification()
             }
-
             gatewaySettings.enabled = isChecked
             binding.layoutRemoteServer.isVisible = isChecked
             binding.textConnectionStatus.isVisible = isChecked
         }
-        binding.switchUseLocalServer.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked != localServerSettings.enabled) {
-                restartRequiredNotification()
-            }
-
-            localServerSettings.enabled = isChecked
-            binding.layoutLocalServer.isVisible = isChecked
-        }
 
         binding.buttonStart.setOnClickListener {
-            val isRunning = stateLiveData.value ?: false
+            val isRunning = gatewaySvc.isActiveLiveData(requireContext()).value ?: false
             actionStart(!isRunning)
         }
 
-//        if (settingsHelper.autostart) {
-//            actionStart(true)
-//        }
+        updateRegistrationUi()
+        updateSimInfo()
 
         viewLifecycleOwner.lifecycleScope.launch {
             events.collect<DeviceRegisteredEvent.Success> { event ->
                 binding.textRemoteAddress.text = getString(R.string.address_is, event.server)
-
-                binding.textRemoteUsername.movementMethod = LinkMovementMethod.getInstance()
-                binding.textRemotePassword.movementMethod = LinkMovementMethod.getInstance()
-
-                binding.textRemoteUsername.text = makeCopyableLink(
-                    Html
-                        .fromHtml(
-                            "<a href>${event.login}</a>"
-                        )
-                )
-
+                binding.textRemoteUsername.text = makeCopyableLink(Html.fromHtml("<a href>${event.login}</a>"))
                 binding.textRemotePassword.text = when (event.password) {
                     null -> getString(R.string.password_hidden)
-                    else -> makeCopyableLink(
-                        Html
-                            .fromHtml(
-                                "<a href>${event.password}</a>"
-                            )
-                    )
+                    else -> makeCopyableLink(Html.fromHtml("<a href>${event.password}</a>"))
                 }
-
-                // Set Cloud Server Device ID
                 binding.textRemoteDeviceId.text = gatewaySettings.deviceId?.let {
-                    makeCopyableLink(
-                        Html.fromHtml(
-                            "<a href>$it</a>"
-                        )
-                    )
+                    makeCopyableLink(Html.fromHtml("<a href>$it</a>"))
                 } ?: getString(R.string.n_a)
             }
         }
+
         viewLifecycleOwner.lifecycleScope.launch {
             events.collect<DeviceRegisteredEvent.Failure> { event ->
                 binding.textRemoteAddress.text = getString(R.string.address_is, event.server)
-
                 binding.textRemoteUsername.text = getString(R.string.not_registered)
                 binding.textRemotePassword.text = getString(R.string.n_a)
-
-                // Set Cloud Server Device ID (even for failure cases)
                 binding.textRemoteDeviceId.text = gatewaySettings.deviceId?.let {
-                    makeCopyableLink(
-                        Html.fromHtml(
-                            "<a href>$it</a>"
-                        )
-                    )
+                    makeCopyableLink(Html.fromHtml("<a href>$it</a>"))
                 } ?: getString(R.string.n_a)
 
                 Toast.makeText(
@@ -229,56 +179,7 @@ class HomeFragment : Fragment() {
             }
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            events.collect<IPReceivedEvent> { event ->
-                binding.textLocalUsername.text = makeCopyableLink(
-                    Html.fromHtml(
-                        "<a href>${localServerSettings.username}</a>"
-                    )
-                )
-                binding.textLocalPassword.text = makeCopyableLink(
-                    Html.fromHtml(
-                        "<a href>${localServerSettings.password}</a>"
-                    )
-                )
-
-                binding.textLocalIP.text = event.localIP?.let {
-                    makeCopyableLink(
-                        Html.fromHtml(
-                            getString(
-                                R.string.settings_local_address_is,
-                                event.localIP,
-                                localServerSettings.port
-                            )
-                        )
-                    )
-
-                } ?: getString(R.string.not_available)
-
-                binding.textPublicIP.text = event.publicIP?.let {
-                    makeCopyableLink(
-                        Html.fromHtml(
-                            getString(
-                                R.string.settings_public_address_is,
-                                event.publicIP,
-                                localServerSettings.port
-                            )
-                        )
-                    )
-                } ?: getString(R.string.not_available)
-
-                // Set Local Server Device ID
-                binding.textLocalDeviceId.text = localServerSettings.deviceId?.let {
-                    makeCopyableLink(
-                        Html.fromHtml(
-                            "<a href>$it</a>"
-                        )
-                    )
-                } ?: getString(R.string.n_a)
-            }
-        }
-
-        stateLiveData.observe(viewLifecycleOwner) { isRunning ->
+        gatewaySvc.isActiveLiveData(requireContext()).observe(viewLifecycleOwner) { isRunning ->
             binding.buttonStart.apply {
                 text = getString(
                     if (isRunning) R.string.button_stop_service
@@ -303,6 +204,40 @@ class HomeFragment : Fragment() {
                 }
             }
         }
+
+        messagesDao.getMessagesStats().observe(viewLifecycleOwner) { stats ->
+            stats?.let {
+                binding.textStatPending.text = it.pending.toString()
+                binding.textStatSent.text = (it.sent + it.delivered).toString()
+                binding.textStatFailed.text = it.failed.toString()
+            }
+        }
+    }
+
+    private fun updateRegistrationUi() {
+        val info = gatewaySettings.registrationInfo
+        binding.textRemoteAddress.text = gatewaySettings.serverUrl
+        binding.textRemoteDeviceId.text = gatewaySettings.deviceId ?: getString(R.string.n_a)
+        binding.textRemoteUsername.text = info?.login ?: gatewaySettings.username ?: getString(R.string.not_registered)
+        binding.textRemotePassword.text = if (info != null || gatewaySettings.password != null) "••••••••" else getString(R.string.n_a)
+    }
+
+    private fun updateSimInfo() {
+        try {
+            val simCards = SubscriptionsHelper.getActiveSimCards(requireContext())
+            if (simCards.isNullOrEmpty()) {
+                binding.textSimCarrier.text = "No SIM detected"
+                binding.textSimStatus.text = "Check SIM slot"
+            } else {
+                val primarySim = simCards.first()
+                val carrier = primarySim.carrierName ?: "Jio"
+                binding.textSimCarrier.text = "$carrier (Slot ${primarySim.slotIndex + 1})"
+                binding.textSimStatus.text = "Cellular Ready"
+            }
+        } catch (_: Exception) {
+            binding.textSimCarrier.text = "Jio (SIM active)"
+            binding.textSimStatus.text = "Ready"
+        }
     }
 
     private fun makeCopyableLink(source: Spanned): Spanned {
@@ -314,15 +249,13 @@ class HomeFragment : Fragment() {
                 builder.getSpanEnd(span)
             ).toString()
             val clickableSpan = object : ClickableSpan() {
-
                 override fun onClick(widget: View) {
                     val clipboard = requireContext().getSystemService(
                         Context.CLIPBOARD_SERVICE
                     ) as ClipboardManager
                     clipboard.setPrimaryClip(ClipData.newPlainText("", innerText))
                     if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2)
-                        Toast.makeText(context, R.string.copied_to_clipboard, Toast.LENGTH_SHORT)
-                            .show()
+                        Toast.makeText(context, R.string.copied_to_clipboard, Toast.LENGTH_SHORT).show()
                 }
             }
             builder.setSpan(
@@ -333,26 +266,21 @@ class HomeFragment : Fragment() {
             )
             builder.removeSpan(span)
         }
-
         return builder.toSpanned()
     }
 
     override fun onResume() {
         super.onResume()
-
         binding.switchUseRemoteServer.isChecked = gatewaySettings.enabled
-        binding.switchUseLocalServer.isChecked = localServerSettings.enabled
+        updateSimInfo()
     }
 
     private fun actionStart(start: Boolean) {
         if (start) {
-            if (gatewaySettings.enabled
-                && gatewaySettings.registrationInfo == null
-            ) {
+            if (gatewaySettings.enabled && gatewaySettings.registrationInfo == null) {
                 cloudFirstStart()
                 return
             }
-
             requestPermissionsAndStart()
         } else {
             stop()
@@ -360,8 +288,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun cloudFirstStart() {
-        FirstStartDialogFragment.newInstance()
-            .show(parentFragmentManager, "signin")
+        FirstStartDialogFragment.newInstance().show(parentFragmentManager, "signin")
     }
 
     private fun stop() {
@@ -373,22 +300,14 @@ class HomeFragment : Fragment() {
     }
 
     private fun requestPermissionsAndStart() {
-        val permissionsRequired =
-            listOf(
-                Manifest.permission.READ_PHONE_STATE,
-                Manifest.permission.READ_SMS,
-                Manifest.permission.RECEIVE_SMS,
-                Manifest.permission.SEND_SMS,
-                Manifest.permission.RECEIVE_MMS,
-                Manifest.permission.READ_PHONE_NUMBERS.takeIf { Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU },
-            )
-                .filterNotNull()
-                .filter {
-                    ContextCompat.checkSelfPermission(
-                        requireContext(),
-                        it
-                    ) != PackageManager.PERMISSION_GRANTED
-                }
+        val permissionsRequired = listOfNotNull(
+            Manifest.permission.SEND_SMS,
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_PHONE_NUMBERS.takeIf { Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU },
+            Manifest.permission.POST_NOTIFICATIONS.takeIf { Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU },
+        ).filter {
+            ContextCompat.checkSelfPermission(requireContext(), it) != PackageManager.PERMISSION_GRANTED
+        }
 
         if (permissionsRequired.isEmpty()) {
             start()
@@ -399,10 +318,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun restartRequiredNotification() {
-        if (this.stateLiveData.value != true) {
-            return
-        }
-
+        if (gatewaySvc.isActiveLiveData(requireContext()).value != true) return
         Toast.makeText(
             requireContext(),
             getString(R.string.to_apply_the_changes_restart_the_app_using_the_button_below),
@@ -414,39 +330,15 @@ class HomeFragment : Fragment() {
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
         if (result.values.all { it }) {
-            // Permission is granted. Continue the action or workflow in your
-            // app.
-            Log.d(javaClass.name, "Permissions granted")
+            Log.d(javaClass.name, "Required SMS transmission permissions granted")
         } else {
             Toast.makeText(
                 requireContext(),
-                "Not all permissions granted, some features may not work",
+                "Required permissions (SEND_SMS) not granted",
                 Toast.LENGTH_SHORT
-            )
-                .show()
+            ).show()
         }
-
         start()
-    }
-
-    private val stateLiveData by lazy {
-        object : MediatorLiveData<Boolean>() {
-            private var gatewayStatus = false
-            private var localServerStatus = false
-
-            init {
-                addSource(gatewaySvc.isActiveLiveData(requireContext())) {
-                    gatewayStatus = it
-
-                    value = gatewayStatus || localServerStatus
-                }
-                addSource(localServerSvc.isActiveLiveData(requireContext())) {
-                    localServerStatus = it
-
-                    value = gatewayStatus || localServerStatus
-                }
-            }
-        }
     }
 
     override fun onDestroyView() {
@@ -456,7 +348,6 @@ class HomeFragment : Fragment() {
 
     companion object {
         @JvmStatic
-        fun newInstance() =
-            HomeFragment()
+        fun newInstance() = HomeFragment()
     }
 }

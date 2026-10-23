@@ -10,8 +10,6 @@ import me.capcom.smsgateway.modules.events.ExternalEventType
 import me.capcom.smsgateway.modules.gateway.events.MessageCancelledEvent
 import me.capcom.smsgateway.modules.gateway.events.MessageEnqueuedEvent
 import me.capcom.smsgateway.modules.gateway.events.SettingsUpdatedEvent
-import me.capcom.smsgateway.modules.gateway.events.WebhooksUpdatedEvent
-import me.capcom.smsgateway.modules.receiver.events.MessagesExportRequestedEvent
 
 class EventsRouter(
     private val eventBus: EventBus,
@@ -24,18 +22,6 @@ class EventsRouter(
                 ExternalEventType.MessageEnqueued ->
                     eventBus.emit(
                         MessageEnqueuedEvent()
-                    )
-
-                ExternalEventType.WebhooksUpdated ->
-                    eventBus.emit(
-                        WebhooksUpdatedEvent()
-                    )
-
-                ExternalEventType.MessagesExportRequested ->
-                    eventBus.emit(
-                        MessagesExportRequestedEvent.withPayload(
-                            requireNotNull(event.data)
-                        )
                     )
 
                 ExternalEventType.SettingsUpdated ->
