@@ -62,9 +62,9 @@
     <string name="login_code">Login Code</string>
     <string name="logs">Logs</string>
     <string name="maximum">Maximum</string>
-    <string name="messages_count">Messages count</string>
-    <string name="messages_header">Messages</string>
-    <string name="messages">Messages…</string>
+    <string name="messages_count">Dispatch queue count</string>
+    <string name="messages_header">Dispatch Queue</string>
+    <string name="messages">Dispatch Queue…</string>
     <string name="minimum">Minimum</string>
     <string name="n_a">n/a</string>
     <string name="new_sms_received_webhooks_registered">Legacy inbound callbacks are unsupported</string>
@@ -123,7 +123,7 @@
     <string name="clear_password">Clear password</string>
     <string name="password_cleared">Password cleared</string>
     <string name="tab_text_home">Home</string>
-    <string name="tab_text_messages">MESSAGES</string>
+    <string name="tab_text_messages">QUEUE</string>
     <string name="tab_text_settings">SETTINGS</string>
     <string name="the_webhook_request_will_wait_for_an_internet_connection">The status update will wait for an internet connection</string>
     <string name="to_add_a_device_to_an_existing_account_please_fill_in_the_credentials_below">Enter the credentials issued by your CONNECT ME administrator.</string>
@@ -135,8 +135,8 @@
     <string name="username">Username</string>
     <string name="view">View</string>
     <string name="webhook_id_format" translatable="false">ID: %1$s</string>
-    <string name="webhook_list_summary">Legacy callback management is not part of AndroGate.</string>
-    <string name="webhook_list_title">Legacy callback settings</string>
+    <string name="webhook_list_summary">Arbitrary webhook management is not supported.</string>
+    <string name="webhook_list_title">Unsupported legacy callback feature</string>
     <string name="webhook_queue_empty">No status update queue entries</string>
     <string name="webhook_queue_empty_filter">No %1$s entries</string>
     <string name="filter_all_count">All (%1$d)</string>
@@ -146,8 +146,8 @@
     <string name="filter_failed_count">Failed (%1$d)</string>
     <string name="filter_permanently_failed_count">Permanently Failed (%1$d)</string>
     <string name="webhook_queue_retry_count_format" translatable="false">Retries: %1$d</string>
-    <string name="webhook_queue_summary">Legacy webhook queue not used by AndroGate.</string>
-    <string name="webhook_queue_title">Legacy callback queue</string>
+    <string name="webhook_queue_summary">Arbitrary webhook delivery is not part of AndroGate.</string>
+    <string name="webhook_queue_title">Unsupported legacy callback queue</string>
     <string name="webhook_queue_detail_title">Legacy callback entry</string>
     <string name="webhook_queue_entry_not_found">Queue entry not found</string>
     <string name="webhook_queue_label_url">URL</string>
@@ -159,19 +159,19 @@
     <string name="webhook_queue_label_payload">Payload</string>
     <string name="webhook_queue_payload_unavailable">Payload unavailable</string>
     <string name="webhook_queue_no_error">None</string>
-    <string name="webhooks_dotdotdot">Legacy callbacks…</string>
-    <string name="webhooks">Legacy callbacks</string>
+    <string name="webhooks_dotdotdot">Legacy callback feature removed</string>
+    <string name="webhooks">Legacy callback feature removed</string>
     <plurals name="review_incoming_sms_webhooks">
         <item quantity="one">A legacy inbound-message callback remains in local preferences. Clear the obsolete callback configuration from the backend.</item>
         <item quantity="other">Legacy inbound-message callbacks remain in local preferences. Clear obsolete callback configuration from the backend.</item>
     </plurals>
     <string name="processing">Processing</string>
     <string name="processing_order_title">Processing order</string>
-    <string name="receiver_content_provider_monitoring">Content Provider Monitoring</string>
-    <string name="receiver_content_provider_monitoring_summary">Unused legacy incoming-message monitoring option</string>
+    <string name="receiver_content_provider_monitoring">Legacy inbound monitor</string>
+    <string name="receiver_content_provider_monitoring_summary">Deprecated upstream option; AndroGate does not inspect inbox content.</string>
     <string name="queue_status">📊 Queue Status</string>
-    <string name="incoming_messages">INBOUND REMOVED</string>
-    <string name="incoming_messages_status">Inbound processing disabled</string>
+    <string name="incoming_messages">Inbound messaging unavailable</string>
+    <string name="incoming_messages_status">Inbound message handling is not provided</string>
     <string name="jwt">JWT</string>
     <string name="jwt_default_ttl_seconds">JWT default TTL (seconds)</string>
     <string name="jwt_ttl_must_be_between_1_second_and_365_days">JWT TTL must be between 1 second
@@ -186,8 +186,8 @@
     <string name="cancel">Cancel</string>
     <string name="outgoing_messages">OUTGOING</string>
     <string name="incoming_type_sms" translatable="false">SMS</string>
-    <string name="incoming_type_data_sms" translatable="false">Data SMS</string>
-    <string name="incoming_type_mms" translatable="false">MMS</string>
+    <string name="incoming_type_data_sms" translatable="false">Legacy data SMS</string>
+    <string name="incoming_type_mms" translatable="false">Legacy MMS</string>
     <string name="language">Language</string>
     <string name="language_system">System default</string>
     <string name="password_must_not_be_empty">Password must not be empty</string>
@@ -196,15 +196,15 @@
     <string name="working_hours_summary">Only send messages within the defined time window</string>
     <string name="working_hours_start">Start time</string>
     <string name="working_hours_end">End time</string>
-    <string name="inbox_dotdotdot">Inbox disabled</string>
-    <string name="inbox_settings_summary">No inbox access is provided by AndroGate.</string>
-    <string name="inbox">Inbox disabled</string>
+    <string name="inbox_dotdotdot">Inbox access removed</string>
+    <string name="inbox_settings_summary">AndroGate does not access the device inbox.</string>
+    <string name="inbox">Inbox access removed</string>
     <string name="filter_sent_count">Sent (%1$d)</string>
     <string name="filter_delivered_count">Delivered (%1$d)</string>
     <string name="filter_cancelled_count">Cancelled (%1$d)</string>
     <string name="filter_sms_count">SMS (%1$d)</string>
-    <string name="filter_data_sms_count">Data SMS unsupported</string>
-    <string name="filter_mms_count">MMS unsupported</string>
+    <string name="filter_data_sms_count">Legacy data SMS</string>
+    <string name="filter_mms_count">Legacy MMS</string>
     <string name="device_key">Device Key</string>
     <string name="device_keys_management">Device keys management</string>
 </resources>
