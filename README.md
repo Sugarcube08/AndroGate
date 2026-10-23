@@ -1,5 +1,9 @@
 # AndroGate
 
+<p align="center"><img src="assets/androgate-logo.svg" width="112" alt="AndroGate logo" /></p>
+
+<p align="center"><strong>Private outbound SMS transport for CONNECT ME</strong></p>
+
 **Private outbound SMS transport for CONNECT ME**
 
 AndroGate turns a dedicated Android phone with an active SIM into an authenticated SMS transmission worker. It is intended for CONNECT ME's server-generated verification messages. The backend remains responsible for OTP generation, expiry, verification, abuse prevention, and account state; AndroGate transports authorized jobs and reports the processing state available from Android and the carrier.
