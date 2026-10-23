@@ -27,17 +27,59 @@ android {
     buildFeatures {
         viewBinding true
     }
+    def localProperties = new Properties()
+    def localPropertiesFile = rootProject.file('local.properties')
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.withReader('UTF-8') { reader ->
+            localProperties.load(reader)
+        }
+    }
+    def keystorePropertiesFile = file('keystore.properties')
+    if (!keystorePropertiesFile.exists()) {
+        keystorePropertiesFile = rootProject.file('keystore.properties')
+    }
+    def keystoreProperties = new Properties()
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.withReader('UTF-8') { reader ->
+            keystoreProperties.load(reader)
+        }
+    }
+
+    def resolveSigningProp = { String... keys ->
+        for (String key : keys) {
+            String envVal = System.getenv(key)
+            if (envVal != null && !envVal.isEmpty()) return envVal
+            if (project.hasProperty(key)) return project.property(key) as String
+            String propVal = keystoreProperties.getProperty(key) ?: localProperties.getProperty(key)
+            if (propVal != null && !propVal.isEmpty()) return propVal
+        }
+        return null
+    }
+
+    def releaseStoreFile = {
+        String customPath = resolveSigningProp("SIGNING_STORE_FILE", "signing.storeFile", "signingStoreFile", "storeFile")
+        if (customPath != null) {
+            def f = file(customPath)
+            if (f.exists()) return f
+            f = rootProject.file(customPath)
+            if (f.exists()) return f
+        }
+        if (file("keystore.jks").exists()) return file("keystore.jks")
+        if (rootProject.file("keystore.jks").exists()) return rootProject.file("keystore.jks")
+        return null
+    }()
+
+    def releaseStorePassword = resolveSigningProp("SIGNING_STORE_PASSWORD", "signing.storePassword", "signingStorePassword", "storePassword")
+    def releaseKeyAlias = resolveSigningProp("SIGNING_KEY_ALIAS", "signing.keyAlias", "signingKeyAlias", "keyAlias") ?: "my-key-alias"
+    def releaseKeyPassword = resolveSigningProp("SIGNING_KEY_PASSWORD", "signing.keyPassword", "signingKeyPassword", "keyPassword") ?: releaseStorePassword
+
     signingConfigs {
         release {
-            def storePwd = System.getenv("SIGNING_STORE_PASSWORD") ?: (project.findProperty("signingStorePassword") as String)
-            def keyAliasVal = System.getenv("SIGNING_KEY_ALIAS") ?: (project.findProperty("signingKeyAlias") as String)
-            def keyPwd = System.getenv("SIGNING_KEY_PASSWORD") ?: (project.findProperty("signingKeyPassword") as String)
-
-            if (file("keystore.jks").exists() && storePwd != null) {
-                storeFile file("keystore.jks")
-                storePassword storePwd
-                keyAlias keyAliasVal
-                keyPassword keyPwd ?: storePwd
+            if (releaseStoreFile != null && releaseStoreFile.exists() && releaseStorePassword != null) {
+                storeFile releaseStoreFile
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
                 v1SigningEnabled true
                 v2SigningEnabled true
             }
@@ -51,8 +93,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            def storePwd = System.getenv("SIGNING_STORE_PASSWORD") ?: (project.findProperty("signingStorePassword") as String)
-            if (file("keystore.jks").exists() && storePwd != null) {
+            if (releaseStoreFile != null && releaseStoreFile.exists() && releaseStorePassword != null) {
                 signingConfig signingConfigs.release
             } else if (project.hasProperty("signReleaseWithDebug") || System.getenv("SIGN_RELEASE_WITH_DEBUG") == "true") {
                 signingConfig signingConfigs.debug
