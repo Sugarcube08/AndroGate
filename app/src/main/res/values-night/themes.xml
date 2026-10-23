@@ -11,5 +11,12 @@
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowActionModeOverlay">true</item>
     </style>
+    <style name="Theme.AndroGate.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/brand_status_bar</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/androgate_launcher_foreground</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/ic_launcher_background</item>
+        <item name="postSplashScreenTheme">@style/Theme.AndroGate</item>
+    </style>
+
     <style name="Theme.SmsGateway" parent="Theme.AndroGate" />
 </resources>
