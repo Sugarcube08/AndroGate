@@ -3,6 +3,7 @@
     <string name="api_url_private_token_credentials_etc">API URL, private token, credentials, etc.</string>
     <string name="api_url">API URL</string>
     <string name="app_name" translatable="false">AndroGate</string>
+    <string name="app_tagline" translatable="false">PRIVATE SMS GATEWAY</string>
     <string name="app_version_build">App version (build)</string>
     <string name="automatic_key_rotation">Automatic key rotation</string>
     <string name="battery_optimization_already_disabled">Battery optimization already disabled</string>
