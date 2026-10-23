@@ -27,6 +27,8 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.brandToolbar.title = getString(R.string.app_name)
+        binding.brandToolbar.subtitle = getString(R.string.app_tagline)
 
         val adapter = FragmentsAdapter(this)
         binding.viewPager.adapter = adapter
