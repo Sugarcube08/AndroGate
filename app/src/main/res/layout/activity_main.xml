@@ -1,16 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
+    android:background="?android:attr/colorBackground"
     tools:context=".MainActivity">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/brandToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/brand_surface"
+        android:elevation="2dp"
+        android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
+        android:title="AndroGate"
+        android:subtitle="PRIVATE SMS GATEWAY"
+        android:titleTextColor="@color/brand_on_primary"
+        android:subtitleTextColor="@color/teal_200" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:background="@color/brand_surface"
+        app:tabIndicatorColor="@color/brand_accent"
+        app:tabSelectedTextColor="@color/brand_on_primary"
+        app:tabTextColor="#FFB7C4D8" />
 
     <FrameLayout
         android:id="@+id/fragmentContainer"
@@ -40,6 +57,4 @@
                 android:indeterminate="true" />
         </FrameLayout>
     </FrameLayout>
-
-
 </androidx.appcompat.widget.LinearLayoutCompat>

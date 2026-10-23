@@ -45,10 +45,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Never produce a production release signed with the debug key.
+            // CI verifies the signing certificate and fails when the keystore is absent.
             if (file("keystore.jks").exists()) {
                 signingConfig signingConfigs.release
-            } else {
-                signingConfig signingConfigs.debug
             }
             manifestPlaceholders = [networkSecurityConfig: "@xml/network_security_config"]
         }
@@ -65,6 +65,20 @@ android {
         exclude 'META-INF/io.netty.versions.properties'
     }
     namespace 'me.capcom.smsgateway'
+
+    // A production release without the provisioned keystore must fail closed.
+    gradle.taskGraph.whenReady { graph ->
+        if (graph.allTasks.any { it.name == "assembleRelease" || it.name == "bundleRelease" }) {
+            if (!file("keystore.jks").exists()) {
+                throw new GradleException("Release signing keystore app/keystore.jks is required; refusing to build a debug-signed release.")
+            }
+            ["SIGNING_STORE_PASSWORD", "SIGNING_KEY_ALIAS", "SIGNING_KEY_PASSWORD"].each { key ->
+                if (!System.getenv(key)) {
+                    throw new GradleException("Missing required release-signing environment variable: " + key)
+                }
+            }
+        }
+    }
 
     testOptions {
         unitTests {
@@ -101,6 +115,7 @@ dependencies {
 
     implementation("androidx.preference:preference-ktx:1.2.1")
     implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")

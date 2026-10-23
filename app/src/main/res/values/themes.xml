@@ -1,28 +1,33 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
     <style name="Theme.AndroGate" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_700</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
-        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorPrimaryVariant">@color/brand_primary_dark</item>
+        <item name="colorOnPrimary">@color/brand_on_primary</item>
+        <item name="colorSecondary">@color/brand_accent</item>
+        <item name="colorSecondaryVariant">@color/brand_accent_dark</item>
+        <item name="colorOnSecondary">@color/brand_on_accent</item>
+        <item name="android:statusBarColor">@color/brand_status_bar</item>
+        <item name="android:navigationBarColor">@color/brand_surface</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+
+    <style name="Theme.AndroGate.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/brand_status_bar</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/androgate_launcher_foreground</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/ic_launcher_background</item>
+        <item name="postSplashScreenTheme">@style/Theme.AndroGate</item>
     </style>
 
     <style name="Theme.SmsGateway" parent="Theme.AndroGate" />
 
-    <!-- Settings screen styles -->
     <style name="HomeCardLabel" parent="Widget.AppCompat.TextView">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_gravity">start</item>
         <item name="android:layout_margin">4dp</item>
         <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Body2</item>
+        <item name="android:textColor">@color/brand_text_secondary</item>
     </style>
 
     <style name="HomeCardValue" parent="Widget.AppCompat.TextView">
@@ -31,9 +36,9 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_gravity">start</item>
         <item name="android:layout_margin">4dp</item>
+        <item name="android:textColor">@color/brand_text_primary</item>
     </style>
 
-    <!-- Compact filter chip for stats panels -->
     <style name="CompactFilterChip" parent="Widget.MaterialComponents.Chip.Filter">
         <item name="chipMinHeight">28dp</item>
         <item name="chipCornerRadius">14dp</item>

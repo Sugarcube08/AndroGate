@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayoutMediator
 import me.capcom.smsgateway.databinding.ActivityMainBinding
@@ -14,6 +15,8 @@ import me.capcom.smsgateway.helpers.LocaleHelper
 
 class MainActivity : AppCompatActivity() {
 
+    private val productTitle: String get() = getString(R.string.app_name)
+
     private lateinit var binding: ActivityMainBinding
 
     override fun attachBaseContext(newBase: Context) {
@@ -21,10 +24,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.brandToolbar.title = getString(R.string.app_name)
+        binding.brandToolbar.subtitle = getString(R.string.app_tagline)
 
         val adapter = FragmentsAdapter(this)
         binding.viewPager.adapter = adapter
