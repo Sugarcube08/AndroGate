@@ -42,7 +42,7 @@
     <string name="key_rotation_upload_failed">Key rotated, but the server upload failed. Will retry
         on the next launch.</string>
     <string name="key_rotated_successfully">Encryption key rotated</string>
-    <string name="ignored_for_public_server">Ignored for public server</string>
+    <string name="ignored_for_public_server">Not applicable to this private gateway</string>
     <string name="information">Information</string>
     <string name="internet_connection_available">Internet connection: available</string>
     <string name="internet_connection_unavailable">Internet connection: unavailable</string>
@@ -66,7 +66,7 @@
     <string name="messages">Messages…</string>
     <string name="minimum">Minimum</string>
     <string name="n_a">n/a</string>
-    <string name="new_sms_received_webhooks_registered">New SMS Received Status callbacks registered</string>
+    <string name="new_sms_received_webhooks_registered">Legacy inbound callbacks are unsupported</string>
     <string name="no_webhooks_found">No status callbacks configured</string>
     <string name="not_registered">not registered</string>
     <string name="not_set">Not set</string>
@@ -101,18 +101,18 @@
     <string name="server_address">Server address</string>
     <string name="server">Server</string>
     <string name="set_maximum_value_to_activate">Set maximum value to activate</string>
-    <string name="settings_address_is_sms_capcom_me" translatable="false">CONNECT ME server</string>
+    <string name="settings_address_is_sms_capcom_me" translatable="false">CONNECT ME gateway</string>
     <string name="settings_changed_via_api_restart_the_app_to_apply_changes">Settings changed via
         API. Restart the app to apply changes.</string>
     <string name="settings_local_address_is" translatable="false">&lt;a href>%1$s:%2$d&lt;/a></string>
     <string name="not_available">Not available</string>
-    <string name="settings_local_server">Local service</string>
+    <string name="settings_local_server">Gateway connection</string>
     <string name="button_start_service">Start Service</string>
     <string name="button_stop_service">Stop Service</string>
     <string name="settings_public_address_is" translatable="false">&lt;a href>%1$s:%2$d&lt;/a></string>
     <string name="settings_start_on_boot">Start on boot</string>
-    <string name="sign_in">Sign In</string>
-    <string name="sign_up">Sign Up</string>
+    <string name="sign_in">Connect device</string>
+    <string name="sign_up">Register device</string>
     <string name="signing_key">Signing Key</string>
     <string name="sms_gateway_is_running_on_port">AndroGate service is active</string>
     <string name="sms_gateway">AndroGate</string>
@@ -125,19 +125,17 @@
     <string name="tab_text_messages">MESSAGES</string>
     <string name="tab_text_settings">SETTINGS</string>
     <string name="the_webhook_request_will_wait_for_an_internet_connection">The status update will wait for an internet connection</string>
-    <string name="to_add_a_device_to_an_existing_account_please_fill_in_the_credentials_below">To
-        add a device to an existing account, please fill in the credentials below.</string>
+    <string name="to_add_a_device_to_an_existing_account_please_fill_in_the_credentials_below">Enter the credentials issued by your CONNECT ME administrator.</string>
     <string name="to_apply_the_changes_restart_the_app_using_the_button_below">To apply the changes,
         restart the app using the button below.</string>
     <string name="use_empty_to_disable">Use empty to disable</string>
-    <string name="use_this_code_to_sign_in_on_another_device">Use this code to sign in on another
-        device</string>
+    <string name="use_this_code_to_sign_in_on_another_device">Use the device registration code issued by CONNECT ME.</string>
     <string name="username_must_be_at_least_3_characters">Username must be at least 3 characters</string>
     <string name="username">Username</string>
     <string name="view">View</string>
     <string name="webhook_id_format" translatable="false">ID: %1$s</string>
-    <string name="webhook_list_summary">View registered status callbacks</string>
-    <string name="webhook_list_title">Registered Status callbacks</string>
+    <string name="webhook_list_summary">Legacy callback management is not part of AndroGate.</string>
+    <string name="webhook_list_title">Legacy callback settings</string>
     <string name="webhook_queue_empty">No status update queue entries</string>
     <string name="webhook_queue_empty_filter">No %1$s entries</string>
     <string name="filter_all_count">All (%1$d)</string>
@@ -147,9 +145,9 @@
     <string name="filter_failed_count">Failed (%1$d)</string>
     <string name="filter_permanently_failed_count">Permanently Failed (%1$d)</string>
     <string name="webhook_queue_retry_count_format" translatable="false">Retries: %1$d</string>
-    <string name="webhook_queue_summary">View recent status update queue entries</string>
-    <string name="webhook_queue_title">Status update queue</string>
-    <string name="webhook_queue_detail_title">Status update queue Entry</string>
+    <string name="webhook_queue_summary">Legacy webhook queue not used by AndroGate.</string>
+    <string name="webhook_queue_title">Legacy callback queue</string>
+    <string name="webhook_queue_detail_title">Legacy callback entry</string>
     <string name="webhook_queue_entry_not_found">Queue entry not found</string>
     <string name="webhook_queue_label_url">URL</string>
     <string name="webhook_queue_label_status">Status</string>
@@ -160,8 +158,8 @@
     <string name="webhook_queue_label_payload">Payload</string>
     <string name="webhook_queue_payload_unavailable">Payload unavailable</string>
     <string name="webhook_queue_no_error">None</string>
-    <string name="webhooks_dotdotdot">Status callbacks…</string>
-    <string name="webhooks">Status callbacks</string>
+    <string name="webhooks_dotdotdot">Legacy callbacks…</string>
+    <string name="webhooks">Legacy callbacks</string>
     <plurals name="review_incoming_sms_webhooks">
         <item quantity="one">A legacy inbound-message callback remains in local preferences. Clear the obsolete callback configuration from the backend.</item>
         <item quantity="other">Legacy inbound-message callbacks remain in local preferences. Clear obsolete callback configuration from the backend.</item>
@@ -197,15 +195,15 @@
     <string name="working_hours_summary">Only send messages within the defined time window</string>
     <string name="working_hours_start">Start time</string>
     <string name="working_hours_end">End time</string>
-    <string name="inbox_dotdotdot">Inbox access disabled access disabled</string>
+    <string name="inbox_dotdotdot">Inbox disabled</string>
     <string name="inbox_settings_summary">No inbox access is provided by AndroGate.</string>
-    <string name="inbox">Inbox access disabled</string>
+    <string name="inbox">Inbox disabled</string>
     <string name="filter_sent_count">Sent (%1$d)</string>
     <string name="filter_delivered_count">Delivered (%1$d)</string>
     <string name="filter_cancelled_count">Cancelled (%1$d)</string>
     <string name="filter_sms_count">SMS (%1$d)</string>
-    <string name="filter_data_sms_count">Data SMS removed</string>
-    <string name="filter_mms_count">MMS removed</string>
+    <string name="filter_data_sms_count">Data SMS unsupported</string>
+    <string name="filter_mms_count">MMS unsupported</string>
     <string name="device_key">Device Key</string>
     <string name="device_keys_management">Device keys management</string>
 </resources>
