@@ -118,6 +118,11 @@ A job marked submitted is not necessarily delivered. Delivery reports depend on 
 
 This project handles SMS-sending capability, which can be abused if the backend or device credentials are compromised. Backend authorization, recipient validation, OTP rate limiting, expiry enforcement, auditing, and carrier-policy compliance are essential controls and cannot be delegated to the Android client alone.
 
+## Further documentation
+
+- [Operations runbook](docs/OPERATIONS.md) — provisioning, daily operation, recovery, and test matrix.
+- [Security notes](docs/SECURITY.md) — trust boundaries, data handling, release integrity, and incident response.
+
 ## Troubleshooting
 
 | Symptom | Checks |
