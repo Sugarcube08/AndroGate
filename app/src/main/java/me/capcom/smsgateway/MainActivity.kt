@@ -14,6 +14,8 @@ import me.capcom.smsgateway.helpers.LocaleHelper
 
 class MainActivity : AppCompatActivity() {
 
+    private val productTitle: String get() = getString(R.string.app_name)
+
     private lateinit var binding: ActivityMainBinding
 
     override fun attachBaseContext(newBase: Context) {
