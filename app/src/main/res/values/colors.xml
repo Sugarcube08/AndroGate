@@ -1,13 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="brand_primary">#155EEF</color>
+    <color name="brand_primary_dark">#0B3DA8</color>
+    <color name="brand_on_primary">#FFFFFF</color>
+    <color name="brand_accent">#36CFC9</color>
+    <color name="brand_accent_dark">#0D9488</color>
+    <color name="brand_on_accent">#052E2B</color>
+    <color name="brand_surface">#0B1220</color>
+    <color name="brand_status_bar">#08101D</color>
+    <color name="brand_text_primary">#172033</color>
+    <color name="brand_text_secondary">#596579</color>
+    <color name="brand_surface_dark">#101827</color>
+    <color name="brand_border">#E1E8F0</color>
+    <color name="brand_success">#14804A</color>
+    <color name="brand_warning">#9A6700</color>
+    <color name="brand_error">#B42318</color>
     <color name="black">#FF000000</color>
-    <color name="grey_700">#FF616161</color>
-    <color name="progressBarOverlay">#33FFFFFF</color>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="red_800">#FFD32F2F</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <color name="grey_700">#FF475467</color>
+    <color name="progressBarOverlay">#330B1220</color>
+    <color name="purple_200">#FF9DBBFF</color>
+    <color name="purple_500">#FF155EEF</color>
+    <color name="purple_700">#FF0B3DA8</color>
+    <color name="red_800">#FFB42318</color>
+    <color name="teal_200">#FF36CFC9</color>
+    <color name="teal_700">#FF0D9488</color>
     <color name="white">#FFFFFFFF</color>
 </resources>
