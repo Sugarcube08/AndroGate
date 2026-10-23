@@ -64,7 +64,7 @@
                         android:layout_marginStart="8dp"
                         android:ellipsize="end"
                         android:lines="1"
-                        android:text="CONNECT ME Gateway"
+                        android:text="AndroGate Gateway"
                         android:textAppearance="@style/TextAppearance.AppCompat.Headline"
                         android:textSize="18sp"
                         app:layout_constraintBottom_toBottomOf="@id/imageRemoteServer"
@@ -147,7 +147,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="SIM &amp; Cellular Network"
+                        android:text="SIM &amp; Cellular Status"
                         android:textAppearance="@style/TextAppearance.AppCompat.Headline"
                         android:textSize="18sp" />
 
@@ -164,7 +164,7 @@
                         <TextView
                             android:id="@+id/textSimCarrier"
                             style="@style/HomeCardValue"
-                            android:text="Jio (Physical SIM)"
+                            android:text="Checking active SIM…"
                             tools:text="Jio 4G / 5G" />
 
                         <TextView
@@ -174,7 +174,7 @@
                         <TextView
                             android:id="@+id/textSimStatus"
                             style="@style/HomeCardValue"
-                            android:text="Slot 1 • Cellular Ready"
+                            android:text="Waiting for telephony status"
                             tools:text="Ready" />
                     </GridLayout>
                 </LinearLayout>
@@ -196,7 +196,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="SMS Dispatch Metrics"
+                        android:text="Dispatch Queue"
                         android:textAppearance="@style/TextAppearance.AppCompat.Headline"
                         android:textSize="18sp" />
 
