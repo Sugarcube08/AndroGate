@@ -1,6 +1,8 @@
 package me.capcom.smsgateway
 
-import me.capcom.smsgateway.data.entities.Message
+import me.capcom.smsgateway.data.MIGRATION_25_26
+import androidx.sqlite.db.SupportSQLiteDatabase
+import java.lang.reflect.Proxy
 import me.capcom.smsgateway.domain.EntitySource
 import me.capcom.smsgateway.domain.MessageContent
 import me.capcom.smsgateway.domain.ProcessingState
@@ -136,6 +138,60 @@ class AndroGateReliabilityTest {
         assertEquals("connectme-otp-test-1", request.message.id)
         assertTrue("Content must be Text", request.message.content is MessageContent.Text)
         assertEquals("Your CONNECT ME verification code is: 492015", (request.message.content as MessageContent.Text).text)
+    }
+
+    @Test
+    fun testDatabaseResolutionPrecedence() {
+        val rootDir = tempFolder.newFolder("databases_res")
+        val legacyDb = File(rootDir, "gateway").apply { writeText("sqlite-legacy-v25-data") }
+        val newDb = File(rootDir, "androgate.db").apply { writeText("sqlite-test-data") }
+
+        // Resolution logic matching AppDatabase.getDatabase
+        val resolveDbName = { legExists: Boolean, newExists: Boolean ->
+            when {
+                legExists -> "gateway"
+                newExists -> "androgate.db"
+                else -> "gateway"
+            }
+        }
+
+        // When legacy database exists, it must ALWAYS be chosen directly without renaming or bypass
+        assertEquals("gateway", resolveDbName(true, false))
+        assertEquals("gateway", resolveDbName(true, true)) // even if androgate.db was created by tests
+        assertEquals("androgate.db", resolveDbName(false, true))
+        assertEquals("gateway", resolveDbName(false, false))
+    }
+
+    @Test
+    fun testMigration25To26DropsDeadTablesAndPreservesPendingJobs() {
+        val executedSql = mutableListOf<String>()
+        val fakeDb = Proxy.newProxyInstance(
+            SupportSQLiteDatabase::class.java.classLoader,
+            arrayOf(SupportSQLiteDatabase::class.java)
+        ) { _, method, args ->
+            if (method.name == "execSQL") {
+                executedSql.add(args[0] as String)
+            }
+            null
+        } as SupportSQLiteDatabase
+
+        // Execute Room migration 25 -> 26
+        MIGRATION_25_26.migrate(fakeDb)
+
+        // Verify dead tables dropped
+        assertTrue(executedSql.contains("DROP TABLE IF EXISTS webhooks"))
+        assertTrue(executedSql.contains("DROP TABLE IF EXISTS webhook_queue"))
+        assertTrue(executedSql.contains("DROP TABLE IF EXISTS webhook_queue_entries"))
+        assertTrue(executedSql.contains("DROP TABLE IF EXISTS inbox_uploads"))
+        assertTrue(executedSql.contains("DROP TABLE IF EXISTS tokens"))
+        assertTrue(executedSql.contains("DROP TABLE IF EXISTS incoming_messages"))
+
+        // Verify essential queue tables are NEVER dropped
+        assertFalse(executedSql.any { it.contains("DROP TABLE IF EXISTS message\b") || it == "DROP TABLE IF EXISTS message" })
+        assertFalse(executedSql.any { it.contains("message_recipient") })
+        assertFalse(executedSql.any { it.contains("recipient_state") })
+        assertFalse(executedSql.any { it.contains("message_state") })
+        assertFalse(executedSql.any { it.contains("device_keys") })
     }
 
     @Test

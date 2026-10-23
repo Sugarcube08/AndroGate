@@ -59,18 +59,16 @@ abstract class AppDatabase : RoomDatabase() {
         fun getDatabase(context: android.content.Context): AppDatabase {
             val legacyDb = context.getDatabasePath("gateway")
             val newDb = context.getDatabasePath("androgate.db")
-            if (legacyDb.exists() && !newDb.exists()) {
-                legacyDb.renameTo(newDb)
-                val legacyShm = context.getDatabasePath("gateway-shm")
-                val legacyWal = context.getDatabasePath("gateway-wal")
-                if (legacyShm.exists()) legacyShm.renameTo(context.getDatabasePath("androgate.db-shm"))
-                if (legacyWal.exists()) legacyWal.renameTo(context.getDatabasePath("androgate.db-wal"))
+            val dbName = when {
+                legacyDb.exists() -> "gateway"
+                newDb.exists() -> "androgate.db"
+                else -> "gateway"
             }
 
             return Room.databaseBuilder(
                 context,
                 AppDatabase::class.java,
-                "androgate.db"
+                dbName
             )
                 .addMigrations(
                     MIGRATION_7_8,
@@ -78,7 +76,6 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_21_22,
                     MIGRATION_25_26,
                 )
-                .fallbackToDestructiveMigration()
                 .build()
         }
     }

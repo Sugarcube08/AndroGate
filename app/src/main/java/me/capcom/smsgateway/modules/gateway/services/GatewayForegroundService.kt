@@ -164,10 +164,14 @@ class GatewayForegroundService : Service() {
         fun start(context: Context) {
             val intent = Intent(context, GatewayForegroundService::class.java)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+            } catch (e: Exception) {
+                Log.e("GatewayFGService", "Could not start foreground service from background: ${e.message}")
             }
         }
 

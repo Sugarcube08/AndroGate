@@ -40,11 +40,9 @@ class SettingsHelper(private val context: Context) {
         }
 
     private fun migrate() {
-        // remove after 2025-11-28
         val PREF_KEY_SERVER_TOKEN = "server_token"
         if (settings.contains(PREF_KEY_SERVER_TOKEN)) {
             settings.edit(true) {
-                putString("localserver.PASSWORD", settings.getString(PREF_KEY_SERVER_TOKEN, null))
                 remove(PREF_KEY_SERVER_TOKEN)
             }
         }
