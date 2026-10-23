@@ -291,8 +291,12 @@
         android:id="@+id/buttonStart"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="8dp"
+        android:layout_margin="12dp"
+        android:minHeight="54dp"
+        android:textSize="16sp"
+        android:textAllCaps="false"
         android:backgroundTint="@color/brand_primary"
+        android:textColor="@color/white"
         android:text="@string/button_start_service"
-        app:cornerRadius="12dp" />
+        app:cornerRadius="14dp" />
 </androidx.appcompat.widget.LinearLayoutCompat>

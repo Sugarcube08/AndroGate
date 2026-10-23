@@ -14,7 +14,7 @@ class GatewaySettings(
     }
 
     var enabled: Boolean
-        get() = storage.get<Boolean>(ENABLED) ?: false
+        get() = storage.get<Boolean>(ENABLED) ?: true
         set(value) = storage.set(ENABLED, value)
 
     val deviceId: String?

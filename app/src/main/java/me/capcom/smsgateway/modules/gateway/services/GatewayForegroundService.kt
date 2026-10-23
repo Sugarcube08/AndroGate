@@ -45,6 +45,7 @@ class GatewayForegroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        _isRunning.postValue(true)
 
         if (!wakeLock.isHeld) {
             wakeLock.acquire()
@@ -157,10 +158,14 @@ class GatewayForegroundService : Service() {
             stopForeground(true)
         }
 
+        _isRunning.postValue(false)
         super.onDestroy()
     }
 
     companion object {
+        private val _isRunning = androidx.lifecycle.MutableLiveData<Boolean>(false)
+        val isRunning: androidx.lifecycle.LiveData<Boolean> = _isRunning
+
         fun start(context: Context) {
             val intent = Intent(context, GatewayForegroundService::class.java)
 
@@ -176,6 +181,7 @@ class GatewayForegroundService : Service() {
         }
 
         fun stop(context: Context) {
+            _isRunning.postValue(false)
             context.stopService(Intent(context, GatewayForegroundService::class.java))
         }
     }

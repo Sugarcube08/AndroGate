@@ -62,7 +62,19 @@ class GatewayService(
         this._api = null
     }
 
-    fun isActiveLiveData(context: Context) = PullMessagesWorker.getStateLiveData(context)
+    fun isActiveLiveData(context: Context): androidx.lifecycle.LiveData<Boolean> {
+        val mediator = androidx.lifecycle.MediatorLiveData<Boolean>()
+        val fgRunning = GatewayForegroundService.isRunning
+        val workerState = PullMessagesWorker.getStateLiveData(context)
+
+        mediator.addSource(fgRunning) { fg ->
+            mediator.value = (fg == true) || (workerState.value == true)
+        }
+        mediator.addSource(workerState) { ws ->
+            mediator.value = (ws == true) || (fgRunning.value == true)
+        }
+        return mediator
+    }
     //endregion
 
     //region Account

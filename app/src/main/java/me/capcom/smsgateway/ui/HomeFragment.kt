@@ -54,6 +54,8 @@ class HomeFragment : Fragment() {
     private val gatewaySvc: GatewayService by inject()
     private val orchestratorSvc: OrchestratorService by inject()
 
+    private var isServiceRunning: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -64,18 +66,17 @@ class HomeFragment : Fragment() {
                     return@setFragmentResultListener
                 }
 
-                FirstStartDialogFragment.Result.SignUp -> requestPermissionsAndStart()
-
-                FirstStartDialogFragment.Result.SignIn -> {
-                    val username = FirstStartDialogFragment.getUsername(data)
-                    val password = FirstStartDialogFragment.getPassword(data)
+                FirstStartDialogFragment.Result.SignUp -> {
                     lifecycleScope.launch {
                         try {
+                            binding.buttonStart.isEnabled = false
+                            gatewaySettings.enabled = true
                             gatewaySvc.registerDevice(
                                 requireContext(),
                                 null,
-                                GatewayService.RegistrationMode.WithCredentials(username, password)
+                                GatewayService.RegistrationMode.Anonymous
                             )
+                            updateRegistrationUi()
                             requestPermissionsAndStart()
                         } catch (th: Throwable) {
                             Toast.makeText(
@@ -83,6 +84,34 @@ class HomeFragment : Fragment() {
                                 "Failed to register device: ${th.message}",
                                 Toast.LENGTH_LONG
                             ).show()
+                        } finally {
+                            binding.buttonStart.isEnabled = true
+                        }
+                    }
+                }
+
+                FirstStartDialogFragment.Result.SignIn -> {
+                    val username = FirstStartDialogFragment.getUsername(data)
+                    val password = FirstStartDialogFragment.getPassword(data)
+                    lifecycleScope.launch {
+                        try {
+                            binding.buttonStart.isEnabled = false
+                            gatewaySettings.enabled = true
+                            gatewaySvc.registerDevice(
+                                requireContext(),
+                                null,
+                                GatewayService.RegistrationMode.WithCredentials(username, password)
+                            )
+                            updateRegistrationUi()
+                            requestPermissionsAndStart()
+                        } catch (th: Throwable) {
+                            Toast.makeText(
+                                requireContext(),
+                                "Failed to register device: ${th.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } finally {
+                            binding.buttonStart.isEnabled = true
                         }
                     }
                 }
@@ -91,11 +120,14 @@ class HomeFragment : Fragment() {
                     val code = FirstStartDialogFragment.getCode(data)
                     lifecycleScope.launch {
                         try {
+                            binding.buttonStart.isEnabled = false
+                            gatewaySettings.enabled = true
                             gatewaySvc.registerDevice(
                                 requireContext(),
                                 null,
                                 GatewayService.RegistrationMode.WithCode(code)
                             )
+                            updateRegistrationUi()
                             requestPermissionsAndStart()
                         } catch (th: Throwable) {
                             Toast.makeText(
@@ -103,6 +135,8 @@ class HomeFragment : Fragment() {
                                 "Failed to register device: ${th.message}",
                                 Toast.LENGTH_LONG
                             ).show()
+                        } finally {
+                            binding.buttonStart.isEnabled = true
                         }
                     }
                 }
@@ -132,17 +166,18 @@ class HomeFragment : Fragment() {
 
         binding.switchUseRemoteServer.isChecked = gatewaySettings.enabled
         binding.switchUseRemoteServer.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked != gatewaySettings.enabled) {
-                restartRequiredNotification()
-            }
             gatewaySettings.enabled = isChecked
             binding.layoutRemoteServer.isVisible = isChecked
             binding.textConnectionStatus.isVisible = isChecked
+            if (!isChecked && isServiceRunning) {
+                stop()
+            } else if (isChecked && !isServiceRunning && gatewaySettings.registrationInfo != null) {
+                actionStart(true)
+            }
         }
 
         binding.buttonStart.setOnClickListener {
-            val isRunning = gatewaySvc.isActiveLiveData(requireContext()).value ?: false
-            actionStart(!isRunning)
+            actionStart(!isServiceRunning)
         }
 
         updateRegistrationUi()
@@ -180,18 +215,8 @@ class HomeFragment : Fragment() {
         }
 
         gatewaySvc.isActiveLiveData(requireContext()).observe(viewLifecycleOwner) { isRunning ->
-            binding.buttonStart.apply {
-                text = getString(
-                    if (isRunning) R.string.button_stop_service
-                    else R.string.button_start_service
-                )
-                backgroundTintList = ColorStateList.valueOf(
-                    ContextCompat.getColor(
-                        requireContext(),
-                        if (isRunning) R.color.red_800 else R.color.grey_700
-                    )
-                )
-            }
+            isServiceRunning = isRunning
+            updateServiceStateUi(isRunning)
         }
 
         connectionService.status.observe(viewLifecycleOwner) {
@@ -275,9 +300,26 @@ class HomeFragment : Fragment() {
         updateSimInfo()
     }
 
+    private fun updateServiceStateUi(isRunning: Boolean) {
+        if (_binding == null) return
+        binding.buttonStart.apply {
+            text = getString(
+                if (isRunning) R.string.button_stop_service
+                else R.string.button_start_service
+            )
+            backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(
+                    requireContext(),
+                    if (isRunning) R.color.brand_error else R.color.brand_primary
+                )
+            )
+        }
+    }
+
     private fun actionStart(start: Boolean) {
         if (start) {
-            if (gatewaySettings.enabled && gatewaySettings.registrationInfo == null) {
+            gatewaySettings.enabled = true
+            if (gatewaySettings.registrationInfo == null) {
                 cloudFirstStart()
                 return
             }
@@ -293,10 +335,17 @@ class HomeFragment : Fragment() {
 
     private fun stop() {
         orchestratorSvc.stop(requireContext())
+        isServiceRunning = false
+        updateServiceStateUi(false)
+        Toast.makeText(requireContext(), "Gateway Service Stopped", Toast.LENGTH_SHORT).show()
     }
 
     private fun start() {
+        gatewaySettings.enabled = true
         orchestratorSvc.start(requireContext().applicationContext, false)
+        isServiceRunning = true
+        updateServiceStateUi(true)
+        Toast.makeText(requireContext(), "Gateway Service Started", Toast.LENGTH_SHORT).show()
     }
 
     private fun requestPermissionsAndStart() {
@@ -318,7 +367,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun restartRequiredNotification() {
-        if (gatewaySvc.isActiveLiveData(requireContext()).value != true) return
+        if (!isServiceRunning) return
         Toast.makeText(
             requireContext(),
             getString(R.string.to_apply_the_changes_restart_the_app_using_the_button_below),
