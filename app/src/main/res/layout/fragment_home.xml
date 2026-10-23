@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="?android:attr/colorBackground"
     tools:context=".ui.HomeFragment">
 
     <TextView
@@ -30,15 +31,19 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="4dp">
+            android:padding="8dp">
 
             <!-- CONNECT ME Gateway Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="4dp"
-                app:cardCornerRadius="16dp"
-                app:contentPadding="12dp">
+                android:layout_margin="6dp"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:strokeColor="@color/brand_border"
+                app:strokeWidth="1dp"
+                app:cardElevation="1dp"
+                app:cardCornerRadius="18dp"
+                app:contentPadding="14dp">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
@@ -215,7 +220,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="0"
                                 android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-                                android:textColor="@color/teal_700" />
+                                android:textColor="@color/brand_success" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -237,7 +242,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="0"
                                 android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-                                android:textColor="@color/purple_700" />
+                                android:textColor="@color/brand_primary" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -259,7 +264,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="0"
                                 android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-                                android:textColor="@color/red_800" />
+                                android:textColor="@color/brand_error" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -287,7 +292,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
-        android:backgroundTint="@color/grey_700"
+        android:backgroundTint="@color/brand_primary"
         android:text="@string/button_start_service"
-        app:cornerRadius="8dp" />
+        app:cornerRadius="12dp" />
 </androidx.appcompat.widget.LinearLayoutCompat>
