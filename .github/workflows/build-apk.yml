@@ -56,6 +56,7 @@ jobs:
           ENCODED_KEYSTORE: ${{ secrets.signing-key-store-base64 }}
         run: |
           set -euo pipefail
+          test -n "$ENCODED_KEYSTORE"
           printf '%s' "$ENCODED_KEYSTORE" | base64 --decode > app/keystore.jks
           test -s app/keystore.jks
 
@@ -73,6 +74,7 @@ jobs:
           test -n "$APK"
           apksigner verify --verbose "$APK"
           apksigner verify --print-certs "$APK"
+          keytool -list -v -keystore app/keystore.jks -alias "$SIGNING_KEY_ALIAS" -storepass "$SIGNING_STORE_PASSWORD" -keypass "$SIGNING_KEY_PASSWORD" | grep -E 'SHA256:|SHA-256:'
           echo "APK_SHA256=$(sha256sum "$APK" | cut -d' ' -f1)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload AndroGate release artifacts
