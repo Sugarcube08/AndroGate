@@ -4,8 +4,6 @@
 
 <p align="center"><strong>Private outbound SMS transport for CONNECT ME</strong></p>
 
-**Private outbound SMS transport for CONNECT ME**
-
 AndroGate turns a dedicated Android phone with an active SIM into an authenticated SMS transmission worker. It is intended for CONNECT ME's server-generated verification messages. The backend remains responsible for OTP generation, expiry, verification, abuse prevention, and account state; AndroGate transports authorized jobs and reports the processing state available from Android and the carrier.
 
 > **Operational note:** Android does not guarantee that a process will remain alive forever. AndroGate is designed to recover using durable local state, a foreground service, scheduled work, and boot/network recovery. Actual reliability depends on Android version, manufacturer power management, connectivity, SIM/service availability, permissions, and carrier policy. Validate on the target handset before relying on it for production.
