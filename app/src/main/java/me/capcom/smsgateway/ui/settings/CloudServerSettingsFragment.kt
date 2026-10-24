@@ -33,13 +33,21 @@ class CloudServerSettingsFragment : BasePreferenceFragment() {
 
         findPreference<EditTextPreference>("gateway.cloud_url")?.setSummaryProvider {
             val hostname = preferenceManager.sharedPreferences?.getString(it.key, null)
-            if (hostname.isNullOrEmpty()) {
+            if (hostname.isNullOrEmpty() || hostname.contains("sms-gate.app")) {
                 preferenceManager.sharedPreferences?.edit(true) {
                     putString(it.key, GatewaySettings.PUBLIC_URL)
                 }
                 return@setSummaryProvider GatewaySettings.PUBLIC_URL
             }
             return@setSummaryProvider hostname
+        }
+
+        findPreference<EditTextPreference>("gateway.private_token")?.setSummaryProvider {
+            val token = preferenceManager.sharedPreferences?.getString(it.key, null)
+            if (token.isNullOrEmpty()) {
+                return@setSummaryProvider GatewaySettings.DEFAULT_PRIVATE_TOKEN
+            }
+            return@setSummaryProvider token
         }
 
 

@@ -8,14 +8,14 @@
             app:key="gateway.cloud_url"
             app:title="@string/api_url" />
         <EditTextPreference
+            app:enableCopying="true"
             app:icon="@drawable/ic_token"
             app:key="gateway.private_token"
-            app:summary="@string/ignored_for_public_server"
             app:title="@string/private_token" />
         <ListPreference
             app:icon="@drawable/ic_notifications"
             app:key="gateway.notification_channel"
-            app:defaultValue="AUTO"
+            app:defaultValue="SSE_ONLY"
             app:entries="@array/notification_channels_titles"
             app:entryValues="@array/notification_channels_values"
             app:title="@string/notification_channel"

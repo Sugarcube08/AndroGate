@@ -40,12 +40,14 @@ class GatewaySettings(
     }
 
     val serverUrl: String
-        get() = storage.get<String?>(CLOUD_URL) ?: PUBLIC_URL
+        get() = storage.get<String?>(CLOUD_URL)?.let { stored ->
+            if (stored.contains("sms-gate.app") || stored.isBlank()) PUBLIC_URL else stored
+        } ?: PUBLIC_URL
     val privateToken: String?
-        get() = storage.get<String>(PRIVATE_TOKEN)
+        get() = storage.get<String?>(PRIVATE_TOKEN)?.takeIf { it.isNotBlank() } ?: DEFAULT_PRIVATE_TOKEN
 
     val notificationChannel: NotificationChannel
-        get() = storage.get<NotificationChannel>(NOTIFICATION_CHANNEL) ?: NotificationChannel.AUTO
+        get() = storage.get<NotificationChannel>(NOTIFICATION_CHANNEL) ?: NotificationChannel.SSE_ONLY
 
     companion object {
         private const val REGISTRATION_INFO = "REGISTRATION_INFO"
@@ -56,7 +58,8 @@ class GatewaySettings(
         private const val PRIVATE_TOKEN = "private_token"
         private const val NOTIFICATION_CHANNEL = "notification_channel"
 
-        const val PUBLIC_URL = "https://api.sms-gate.app/mobile/v1"
+        const val PUBLIC_URL = "https://androgateserver.onrender.com/api/mobile/v1"
+        const val DEFAULT_PRIVATE_TOKEN = "tfvWFtVRoh70Gw4xMNri7lNH9f30EcLWNYXdGAOInCM"
     }
 
     override fun export(): Map<String, *> {
@@ -70,9 +73,9 @@ class GatewaySettings(
         return data.map {
             when (it.key) {
                 CLOUD_URL -> {
-                    val url = it.value?.toString() ?: PUBLIC_URL
-                    if (url != null && !url.startsWith("https://")) {
-                        throw IllegalArgumentException("url must start with https://")
+                    val url = it.value?.toString()?.takeIf { u -> u.isNotBlank() } ?: PUBLIC_URL
+                    if (!url.startsWith("https://") && !url.startsWith("http://")) {
+                        throw IllegalArgumentException("url must start with https:// or http://")
                     }
 
                     val changed = serverUrl != url
@@ -93,7 +96,7 @@ class GatewaySettings(
 
                 NOTIFICATION_CHANNEL -> {
                     val newValue = it.value?.let { NotificationChannel.valueOf(it.toString()) }
-                        ?: NotificationChannel.AUTO
+                        ?: NotificationChannel.SSE_ONLY
                     val changed = notificationChannel != newValue
 
                     storage.set(it.key, newValue.name)
