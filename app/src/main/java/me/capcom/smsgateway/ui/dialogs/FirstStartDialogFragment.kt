@@ -21,27 +21,13 @@ class FirstStartDialogFragment : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogFirstStartBinding.inflate(layoutInflater)
 
+        val initialTab = arguments?.getInt(ARG_INITIAL_TAB) ?: POSITION_SIGNUP
+        updateTabViews(initialTab)
+        binding.tabLayout.getTabAt(initialTab)?.select()
+
         binding.tabLayout.addOnTabSelectedListener(object : OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
-                when (tab.position) {
-                    POSITION_SIGNUP -> {
-                        binding.layoutSignUp.isVisible = true
-                        binding.layoutSignIn.isVisible = false
-                        binding.layoutSignInByCode.isVisible = false
-                    }
-
-                    POSITION_SIGNIN -> {
-                        binding.layoutSignUp.isVisible = false
-                        binding.layoutSignIn.isVisible = true
-                        binding.layoutSignInByCode.isVisible = false
-                    }
-
-                    POSITION_SIGNIN_BY_CODE -> {
-                        binding.layoutSignUp.isVisible = false
-                        binding.layoutSignIn.isVisible = false
-                        binding.layoutSignInByCode.isVisible = true
-                    }
-                }
+                updateTabViews(tab.position)
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab?) {
@@ -69,6 +55,12 @@ class FirstStartDialogFragment : DialogFragment() {
                 setCancelable(false)
             }
             .create()
+    }
+
+    private fun updateTabViews(position: Int) {
+        binding.layoutSignUp.isVisible = position == POSITION_SIGNUP
+        binding.layoutSignIn.isVisible = position == POSITION_SIGNIN
+        binding.layoutSignInByCode.isVisible = position == POSITION_SIGNIN_BY_CODE
     }
 
     override fun onDestroyView() {
@@ -154,16 +146,22 @@ class FirstStartDialogFragment : DialogFragment() {
     companion object {
         const val REQUEST_KEY = "FirstStartDialogFragment"
 
-        private const val POSITION_SIGNUP = 0
-        private const val POSITION_SIGNIN = 1
-        private const val POSITION_SIGNIN_BY_CODE = 2
+        const val POSITION_SIGNUP = 0
+        const val POSITION_SIGNIN = 1
+        const val POSITION_SIGNIN_BY_CODE = 2
+        private const val ARG_INITIAL_TAB = "initial_tab"
 
         private const val KEY_RESULT_CODE = "result_code"
         private const val KEY_USERNAME = "username"
         private const val KEY_PASSWORD = "password"
         private const val KEY_CODE = "code"
 
-        fun newInstance(): FirstStartDialogFragment = FirstStartDialogFragment()
+        fun newInstance(initialTab: Int = POSITION_SIGNUP): FirstStartDialogFragment =
+            FirstStartDialogFragment().apply {
+                arguments = Bundle().apply {
+                    putInt(ARG_INITIAL_TAB, initialTab)
+                }
+            }
 
         fun getResult(data: Bundle): Result =
             Result.valueOf(data.getString(KEY_RESULT_CODE) ?: Result.Canceled.name)

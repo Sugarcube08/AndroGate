@@ -128,6 +128,41 @@
                             style="@style/HomeCardValue"
                             tools:text="••••••••" />
                     </GridLayout>
+
+                    <LinearLayout
+                        android:id="@+id/layoutAccountButtons"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/layoutRemoteServer">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonSignUp"
+                            style="?attr/materialButtonStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="4dp"
+                            android:layout_weight="1"
+                            android:text="@string/sign_up"
+                            app:cornerRadius="8dp"
+                            app:icon="@drawable/ic_username"
+                            app:iconGravity="textStart" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/buttonSignIn"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:layout_weight="1"
+                            android:text="@string/sign_in"
+                            app:cornerRadius="8dp"
+                            app:icon="@drawable/ic_password"
+                            app:iconGravity="textStart" />
+                    </LinearLayout>
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 

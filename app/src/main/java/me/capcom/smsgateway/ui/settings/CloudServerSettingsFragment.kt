@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import me.capcom.smsgateway.R
 import me.capcom.smsgateway.modules.gateway.GatewayService
 import me.capcom.smsgateway.modules.gateway.GatewaySettings
+import me.capcom.smsgateway.ui.dialogs.FirstStartDialogFragment
 import me.capcom.smsgateway.ui.dialogs.PasswordPromptDialogFragment
 import org.koin.android.ext.android.inject
 import java.net.URL
@@ -127,6 +128,84 @@ class CloudServerSettingsFragment : BasePreferenceFragment() {
                     )
                 }
                 true
+            }
+        }
+
+        findPreference<Preference>("gateway.action_sign_up")?.setOnPreferenceClickListener {
+            FirstStartDialogFragment.newInstance(FirstStartDialogFragment.POSITION_SIGNUP)
+                .show(parentFragmentManager, "signup")
+            true
+        }
+
+        findPreference<Preference>("gateway.action_sign_in")?.setOnPreferenceClickListener {
+            FirstStartDialogFragment.newInstance(FirstStartDialogFragment.POSITION_SIGNIN)
+                .show(parentFragmentManager, "signin")
+            true
+        }
+
+        setFragmentResultListener(FirstStartDialogFragment.REQUEST_KEY) { _, data ->
+            when (FirstStartDialogFragment.getResult(data)) {
+                FirstStartDialogFragment.Result.Canceled -> {}
+                FirstStartDialogFragment.Result.SignUp -> {
+                    lifecycleScope.launch {
+                        try {
+                            requireActivity().findViewById<View>(R.id.progressBar)?.isVisible = true
+                            settings.enabled = true
+                            service.registerDevice(
+                                requireContext(),
+                                null,
+                                GatewayService.RegistrationMode.Anonymous
+                            )
+                            listView.adapter?.notifyDataSetChanged()
+                            showToast("Registered successfully")
+                        } catch (th: Throwable) {
+                            showToast(getString(R.string.failed_to_register_device, th.message))
+                        } finally {
+                            requireActivity().findViewById<View>(R.id.progressBar)?.isVisible = false
+                        }
+                    }
+                }
+                FirstStartDialogFragment.Result.SignIn -> {
+                    val username = FirstStartDialogFragment.getUsername(data)
+                    val password = FirstStartDialogFragment.getPassword(data)
+                    lifecycleScope.launch {
+                        try {
+                            requireActivity().findViewById<View>(R.id.progressBar)?.isVisible = true
+                            settings.enabled = true
+                            service.registerDevice(
+                                requireContext(),
+                                null,
+                                GatewayService.RegistrationMode.WithCredentials(username, password)
+                            )
+                            listView.adapter?.notifyDataSetChanged()
+                            showToast("Connected successfully")
+                        } catch (th: Throwable) {
+                            showToast(getString(R.string.failed_to_register_device, th.message))
+                        } finally {
+                            requireActivity().findViewById<View>(R.id.progressBar)?.isVisible = false
+                        }
+                    }
+                }
+                FirstStartDialogFragment.Result.SignInByCode -> {
+                    val code = FirstStartDialogFragment.getCode(data)
+                    lifecycleScope.launch {
+                        try {
+                            requireActivity().findViewById<View>(R.id.progressBar)?.isVisible = true
+                            settings.enabled = true
+                            service.registerDevice(
+                                requireContext(),
+                                null,
+                                GatewayService.RegistrationMode.WithCode(code)
+                            )
+                            listView.adapter?.notifyDataSetChanged()
+                            showToast("Connected successfully")
+                        } catch (th: Throwable) {
+                            showToast(getString(R.string.failed_to_register_device, th.message))
+                        } finally {
+                            requireActivity().findViewById<View>(R.id.progressBar)?.isVisible = false
+                        }
+                    }
+                }
             }
         }
 

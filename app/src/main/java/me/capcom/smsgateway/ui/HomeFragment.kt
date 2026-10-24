@@ -168,12 +168,23 @@ class HomeFragment : Fragment() {
         binding.switchUseRemoteServer.setOnCheckedChangeListener { _, isChecked ->
             gatewaySettings.enabled = isChecked
             binding.layoutRemoteServer.isVisible = isChecked
+            binding.layoutAccountButtons.isVisible = isChecked
             binding.textConnectionStatus.isVisible = isChecked
             if (!isChecked && isServiceRunning) {
                 stop()
             } else if (isChecked && !isServiceRunning && gatewaySettings.registrationInfo != null) {
                 actionStart(true)
             }
+        }
+
+        binding.buttonSignUp.setOnClickListener {
+            FirstStartDialogFragment.newInstance(FirstStartDialogFragment.POSITION_SIGNUP)
+                .show(parentFragmentManager, "signup")
+        }
+
+        binding.buttonSignIn.setOnClickListener {
+            FirstStartDialogFragment.newInstance(FirstStartDialogFragment.POSITION_SIGNIN)
+                .show(parentFragmentManager, "signin")
         }
 
         binding.buttonStart.setOnClickListener {
@@ -245,6 +256,14 @@ class HomeFragment : Fragment() {
         binding.textRemoteDeviceId.text = gatewaySettings.deviceId ?: getString(R.string.n_a)
         binding.textRemoteUsername.text = info?.login ?: gatewaySettings.username ?: getString(R.string.not_registered)
         binding.textRemotePassword.text = if (info != null || gatewaySettings.password != null) "••••••••" else getString(R.string.n_a)
+
+        if (info != null || gatewaySettings.username != null) {
+            binding.buttonSignUp.text = getString(R.string.re_register)
+            binding.buttonSignIn.text = getString(R.string.switch_account)
+        } else {
+            binding.buttonSignUp.text = getString(R.string.sign_up)
+            binding.buttonSignIn.text = getString(R.string.sign_in)
+        }
     }
 
     private fun updateSimInfo() {

@@ -22,6 +22,14 @@
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
     <PreferenceCategory app:title="@string/credentials">
+        <Preference
+            android:icon="@drawable/ic_username"
+            android:key="gateway.action_sign_up"
+            android:title="@string/sign_up" />
+        <Preference
+            android:icon="@drawable/ic_password"
+            android:key="gateway.action_sign_in"
+            android:title="@string/sign_in" />
         <EditTextPreference
             app:enableCopying="true"
             app:icon="@drawable/ic_username"
